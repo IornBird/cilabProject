@@ -106,5 +106,6 @@ if __name__ == '__main__':
     competition_values = (1, 'competition1', '2021-10-16', 'NCU', 'log', 0, 0, 1, 2, 1)
     insert_db('competition', competition_values)
     
-    pass
+    # pass
+    # push2
 
