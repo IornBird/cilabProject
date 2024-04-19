@@ -2,11 +2,15 @@
 
 
 import MySQLdb
+import dotenv
+
+mysql_config = dotenv.dotenv_values('.env')
+mysql_config['MySQL_password'] = mysql_config['MySQL_password'].replace('"', '')
 
 
 def dump_table(table_name):
     command = f"Select * from {table_name}"
-    db = MySQLdb.connect(host="localhost", user="root", db="taekwondo") #, password="NCUCSIE"
+    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -17,27 +21,8 @@ def dump_table(table_name):
     print(f'{command=} executed.')
 
 
-'''
-CREATE TABLE IF NOT EXISTS contestant (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), nationality VARCHAR(255));
-CREATE TABLE IF NOT EXISTS comp_stats(contestant_id INT, contest_num INT, contest_tot_secs INT, 
-                    wins INT, win_rounds INT, lose_rounds INT, 
-                    punches INT, kicks INT, suc_punches INT, suc_kicks INT, 
-                    pts INT, vios INT, vio_lost_pts INT);
-CREATE TABLE IF NOT EXISTS technique_stats(contestant_id INT, 
-                    360RoundHouseKickLeft INT, 360RoundHouseKickRight INT, AxeKickLeft INT, AxeKickRight INT, 
-                    BackHookKickLeft INT, BackHookKickRight INT, BackKickLeft INT, BackKickRight INT, 
-                    FrontKickLeft INT, FrontKickRight INT, RoundHouseKickLeft INT, RoundHouseKickRight INT,
-                    SideKickLeft INT, SideKickRight INT, 
-                    PunchLeft INT, PunchRight INT);
-CREATE TABLE IF NOT EXISTS body_stats(contestant_id INT, 
-                    height FLOAT, weight FLOAT);
-CREATE TABLE IF NOT EXISTS competition (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), date DATE, location VARCHAR(255), log LONGTEXT, 
-                    red_contestant_id INT, blue_contestant_id INT, winner_id INT, 
-                    red_points INT, blue_points INT);
-
-'''
 def init_db():
-    db = MySQLdb.connect(host="localhost", user="root", password="NCUCSIE", db="taekwondo")
+    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
     with db:
         cur = db.cursor()
         # TABLE contestant
@@ -74,7 +59,7 @@ def insert_db(table_name, values):
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
     command = f"Insert into {table_name} Values {values}"
-    db = MySQLdb.connect(host="localhost", user="root", db="taekwondo") #, password="NCUCSIE"
+    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -90,7 +75,7 @@ def update_db(table_name, set_clause, where_clause):
     Update TABLE set SET_CLAUSE where WHERE_CLAUSE
     '''
     command = f"Update {table_name} set {set_clause} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root', db='taekwondo') #, password='NCUCSIE'
+    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -106,7 +91,7 @@ def select_db(table_name, select_clause, where_clause):
     Select SELECT_CLAUSE from TABLE where WHERE_CLAUSE
     '''
     command = f"Select {select_clause} from {table_name} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root', db='taekwondo') # , password='NCUCSIE'
+    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
     with db:
         cur = db.cursor()
         cur.execute(command)
