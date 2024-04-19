@@ -122,4 +122,5 @@ if __name__ == '__main__':
     insert_db('competition', competition_values)
     
     # pass
+    # push
 
