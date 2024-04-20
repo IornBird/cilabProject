@@ -55,6 +55,7 @@ class ShowCapture(wx.Panel):
 
     def OnPaint(self, evt):
         self.drawing = True
+
         dc = wx.BufferedPaintDC(self)
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
@@ -63,6 +64,8 @@ class ShowCapture(wx.Panel):
         corner, ratio = putRectangle(*bmpSize, wSize, 1)
         bmpSize = toInts([bmpSize.x * ratio, bmpSize.y * ratio])
         gc.DrawBitmap(self.bmp, *corner, *bmpSize)
+        # dc.DrawBitmap(self.bmp, 0, 0)
+
         self.drawing = False
 
     def NextFrame(self, event):
