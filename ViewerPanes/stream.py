@@ -1,7 +1,7 @@
 import wx
 import cv2
 
-
+from PublicFunctions import *
 
 class CapFrame(wx.Frame):
     def __init__(self, ip_cam):
@@ -31,6 +31,8 @@ class ShowCapture(wx.Panel):
     def __init__(self, parent, capture, fps=60):
         wx.Panel.__init__(self, parent)
 
+        self.drawing = False
+
         self.capture = capture
         ret, frame = self.capture.read()
 
@@ -52,10 +54,20 @@ class ShowCapture(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.NextFrame)
 
     def OnPaint(self, evt):
+        self.drawing = True
         dc = wx.BufferedPaintDC(self)
-        dc.DrawBitmap(self.bmp, 0, 0)
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        wSize = self.GetSize()
+        bmpSize = self.bmp.GetScaledSize()
+        corner, ratio = putRectangle(*bmpSize, wSize, 1)
+        bmpSize = toInts([bmpSize.x * ratio, bmpSize.y * ratio])
+        gc.DrawBitmap(self.bmp, *corner, *bmpSize)
+        self.drawing = False
 
     def NextFrame(self, event):
+        if self.drawing:
+            return
         ret, frame = self.capture.read()
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -91,11 +103,11 @@ def wxShowCapture(parent, cam, fps=60):
     # app.MainLoop()
 
 if __name__ == '__main__':
-    ip = '192.168.20.127'
+    ip = '192.168.0.2'
     ip2 = '192.168.20.225'
     port = '8080'
     https_cam = f'https://{ip}:{port}/video'
-    https_cam2 = f'https://{ip2}:{port}/video'
+    # https_cam2 = f'https://{ip2}:{port}/video'
     rtsp_cam = f'rtsp://{ip}:{port}/h264_ulaw.sdp'
     
     cam_fps = 60
@@ -106,9 +118,9 @@ if __name__ == '__main__':
     frame = wx.Frame(None)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     cap1 = wxShowCapture(frame, https_cam, cam_fps)
-    cap2 = wxShowCapture(frame, https_cam2, cam_fps)
+    # cap2 = wxShowCapture(frame, https_cam2, cam_fps)
     sizer.Add(cap1, 1, wx.EXPAND)
-    sizer.Add(cap2, 1, wx.EXPAND)
+    # sizer.Add(cap2, 1, wx.EXPAND)
     frame.SetSizer(sizer)
     frame.Show()
     app.MainLoop()
