@@ -3,6 +3,8 @@ import cv2
 
 from PublicFunctions import *
 
+
+# this class has not used yet
 class CapFrame(wx.Frame):
     def __init__(self, ip_cam):
         super().__init__(None, title='IP Camera Stream', size=(640, 480))
@@ -25,34 +27,55 @@ class CapFrame(wx.Frame):
         dc = wx.BufferedPaintDC(self)
         dc.DrawBitmap(self.bmp, 0, 0)
         
-        
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture, fps=60):
+    def __init__(self, parent, capture=None, fps=60):
         wx.Panel.__init__(self, parent)
 
         self.drawing = False
+        self.period = round(1000 / fps)
 
-        self.capture = capture
-        ret, frame = self.capture.read()
+        self.capture = None  # capture
+        self.bmp = None  # wx.Bitmap
+        # ret, frame = self.capture.read()
 
-        height, width = frame.shape[:2]
-        parent.SetSize((width, height))
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # self.bmp = wx.BitmapFromBuffer(width, height, frame)
-        self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
+        # height, width = frame.shape[:2]
+        if capture is not None:
+            self.SetBitmap(capture)
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #
+        # # self.bmp = wx.BitmapFromBuffer(width, height, frame)
+        # self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
         # self.bmp = wx.Bitmap.FromBufferAndAlpha(width, height, frame)
         
-
         self.timer = wx.Timer(self)
         # self.timer.Start(1000./fps)
-        self.timer.Start(int(1000/fps))
-
+        # self.timer.Start(self.period)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_TIMER, self.NextFrame)
+        self.Bind(wx.EVT_TIMER, self.OnNextFrame)
 
+    # Interfaces
+    def SetCma(self, ip: str, port: str):
+        cam = f'https://{ip}:{port}/video'
+        capture = cv2.VideoCapture(cam)
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+        self.SetBitmap(capture)
+
+    def Play(self):
+        if not self.timer.IsRunning():
+            self.timer.Start(self.period)
+
+    def Stop(self):
+        if self.timer.IsRunning():
+            self.timer.Stop()
+
+    def Destroy(self):
+        self.Stop()
+        super().Destroy()
+
+    # Event catcher
     def OnPaint(self, evt):
         self.drawing = True
 
@@ -68,7 +91,7 @@ class ShowCapture(wx.Panel):
 
         self.drawing = False
 
-    def NextFrame(self, event):
+    def OnNextFrame(self, event):
         if self.drawing:
             return
         ret, frame = self.capture.read()
@@ -76,6 +99,19 @@ class ShowCapture(wx.Panel):
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
             self.Refresh()
+
+    # Private functions
+    def SetBitmap(self, capture):
+        self.capture = capture
+        ret, frame = self.capture.read()
+
+        height, width = frame.shape[:2]
+        self.GetParent().SetSize(width, height)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
+
+        return (width, height)
 
 def cv2ShowCapture(cam, fps=60):
     capture = cv2.VideoCapture(cam)

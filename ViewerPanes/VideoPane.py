@@ -15,10 +15,10 @@ class VideoPane(wx.Panel):
 
 
         # stream
-        self.stream = wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
-        self.stream.Load(self.videos[1])
-        self.stream.SetPlaybackRate(1)
-        self.stream.SetVolume(1)
+        self.stream = self.mode[1]  # wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
+        # self.stream.Load(self.videos[1])
+        # self.stream.SetPlaybackRate(1)
+        # self.stream.SetVolume(1)
         # self.stream.ShowPlayerControls()
         vidoeSizer.Add(self.stream, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -83,6 +83,7 @@ class VideoPane(wx.Panel):
         pass
 
     def setPrivateMembers(self, passTo):
+        self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
