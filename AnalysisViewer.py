@@ -119,7 +119,9 @@ class AnalysisViewer(wx.Panel):
 
     # Virtual event handlers, override them in your derived class
     def OnChoiceName(self, event):
-        event.Skip()
+        # TODO: Finish this function
+        name = self.contestantChoice.GetLabelText()
+        sql.select_db('contestant', 'id', 'name=' + name)
 
     # private functions
     def getData(self):

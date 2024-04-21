@@ -4,6 +4,8 @@
 import MySQLdb
 import dotenv
 
+#  dotenv.set_key('.env', 'MySQL_password', <PASSWORD>)
+
 mysql_config = dotenv.dotenv_values('.env')
 mysql_config['MySQL_password'] = mysql_config['MySQL_password'].replace('"', '')
 

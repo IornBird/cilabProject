@@ -14,6 +14,9 @@ class MainFrame(wx.Frame):
         self.closeReq = False
         # place elements here
         self.CreateControls()
+
+        self.analysis.importData()
+
         self.timer = wx.Timer()
         self.Bind(wx.EVT_TIMER, self.OnTimer)
         self.Bind(wx.EVT_CLOSE, self.OnClose)

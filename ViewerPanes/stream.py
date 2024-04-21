@@ -2,7 +2,7 @@ import wx
 import cv2
 
 from PublicFunctions import *
-from StreamPlayer import *
+from ViewerPanes.StreamPlayer import *
 
 # this class has not used yet
 class CapFrame(wx.Frame):
@@ -43,7 +43,8 @@ class ShowCapture(wx.Panel):
 
         self.player = StreamPlayer(captures, fps)
         self.timer = wx.Timer()
-        self.bmp = None  # wx.Bitmap
+        self.bmp = None
+        self.SetBitmap()
         self.timer.Start(self.period)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
@@ -54,7 +55,7 @@ class ShowCapture(wx.Panel):
     def Pause(self):
         self.playing = False
 
-    def toRealTime(self):
+    def toRealTime(self, evt=None):
         self.player.setTime(0)
 
     def setTime(self, time: int):
@@ -109,6 +110,16 @@ class ShowCapture(wx.Panel):
             frame = cv2.cvtColor(self.player.viewNextNFrame(-1), cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
             self.Refresh()
+
+    # Private functions
+    def SetBitmap(self):
+        ret, frame = self.player.cameras[self.player.camera_no].read()
+
+        height, width = frame.shape[:2]
+        self.GetParent().SetSize(width, height)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
 
 class ShowCapture2(wx.Panel):
     def __init__(self, parent, captures=None, fps=60):
@@ -220,12 +231,12 @@ def wxShowCapture(parent, cam, fps=60):
 
     # app = wx.App()
     # frame = wx.Frame(None)
-    return ShowCapture(parent, capture, fps)
+    return ShowCapture2(parent, capture, fps)
     # frame.Show()
     # app.MainLoop()
 
 if __name__ == '__main__':
-    ip = '192.168.0.2'
+    ip = '192.168.10.236'
     ip2 = '192.168.20.225'
     port = '8080'
     https_cam = f'https://{ip}:{port}/video'

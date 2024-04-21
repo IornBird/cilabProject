@@ -13,11 +13,12 @@ class JudgeViewer(wx.Panel):
         self.videoNotLoad = True
         self.timer.Start(30)
         # demo
-        self.loadVideos([
-            "C:\\Users\\User\\Downloads\\explaning.mp4",
-            "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
-            "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
-        ])
+        self.loadVideos(['192.168.10.236'])
+        # self.loadVideos([
+        #     "C:\\Users\\User\\Downloads\\explaning.mp4",
+        #     "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
+        #     "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
+        # ])
         self.setTechRecord((
             ["Yume", [TechRecord(0, 1000, "A1", 0), TechRecord(2000, 3000, "A2", 0)]],
             ["Laura", [TechRecord(500, 1500, "A3", 0), TechRecord(2000, 2500, "A4", 0)]]
@@ -31,7 +32,7 @@ class JudgeViewer(wx.Panel):
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
                 self.techList = ScoreSetPane(vtSpliter)
-                self.videoPane = VideoPane(vtSpliter, self.needReload)
+                self.videoPane = VideoPane(vtSpliter, ['192.168.10.236'], self.needReload)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.techList, self.videoPane)
             self.timeLine = ScoreBar(hrSpliter, wx.HORIZONTAL, self.passTime)
@@ -44,7 +45,6 @@ class JudgeViewer(wx.Panel):
 
     # Interfaces
     def setTechRecord(self, records: tuple[str, list[TechRecord]]):
-        self.techList.setTechRecord(records)
         self.timeLine.setTechRecord(records)
 
     def loadVideos(self, videos: list[str]):
@@ -62,7 +62,6 @@ class JudgeViewer(wx.Panel):
         if self.videoNotLoad:
             self.needReload()
         self.timeLine.setPlayingTime(now)
-        self.techList.setPlayingTime(now)
 
     def needReload(self):
         length = self.videoPane.getVideoLength()
@@ -70,7 +69,6 @@ class JudgeViewer(wx.Panel):
         if self.videoNotLoad:
             return True
         self.timeLine.setVideoLength(length)
-        self.techList.setVideoLength(length)
         return False
 
     def passTime(self, time: int):

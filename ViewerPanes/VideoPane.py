@@ -34,9 +34,23 @@ class VideoPane(wx.Panel):
         self.playBar = wx.ToolBar(self.PlayPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL)
         self.playBar.SetFont(wx.Font(wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, wx.EmptyString))
 
-        self.playButtom = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                               wx.Bitmap(u"Images\\playButtom.png", wx.BITMAP_TYPE_ANY),
-                                               wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+        self.playButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\playButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.toRealTimeButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\toRealTimeButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.preFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\preFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.nxtFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\nxtFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.playBar.Realize()
 
         self.playBar.Realize()
 
@@ -75,7 +89,11 @@ class VideoPane(wx.Panel):
         self.Layout()
 
         # Connect Events
-        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButtom)
+        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
+
         self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
         self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
@@ -138,7 +156,7 @@ class VideoPane(wx.Panel):
         self.cameraNum.SetValue(self.cameraNo)
 
         # self.stream.Load(self.videos[self.cameraNo])
-        self.stream.switchStream(self.cameraNo)
+        self.stream.switchStream(self.cameraNo - 1)
         if not self.playing:
             self.stream.Play()
         self.passLoad()
