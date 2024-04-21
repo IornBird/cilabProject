@@ -1,4 +1,8 @@
 import wx
+import time
+
+def getNowMs():
+    return time.time_ns() // 10 ** 6
 
 
 def detectFont(size: list[float], panel: wx.Window, string: str, ratio=0.9):

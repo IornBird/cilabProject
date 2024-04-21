@@ -2,7 +2,7 @@ import wx
 import cv2
 
 from PublicFunctions import *
-
+from StreamPlayer import *
 
 # this class has not used yet
 class CapFrame(wx.Frame):
@@ -29,19 +29,102 @@ class CapFrame(wx.Frame):
         
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, capture=None, fps=60):
+    def __init__(self, parent, streams: list[str], fps=60):
+        super().__init__(parent)
+        self.SetBackgroundColour(wx.BLACK)
+        captures = [cv2.VideoCapture(c) for c in streams]
+        for c in captures:
+            c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+            c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+
+        self.drawing = False
+        self.period = round(1000 / fps)
+        self.playing = False
+
+        self.player = StreamPlayer(captures, fps)
+        self.timer = wx.Timer()
+        self.bmp = None  # wx.Bitmap
+        self.timer.Start(self.period)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+    # Interfaces
+    def Play(self):
+        self.playing = True
+
+    def Pause(self):
+        self.playing = False
+
+    def toRealTime(self):
+        self.player.setTime(0)
+
+    def setTime(self, time: int):
+        self.player.setTime(self.player.realTime - time)
+
+    def switchStream(self, n: int):
+        self.player.chooseStream(n)
+
+    def getPlayingTime(self):
+        return self.player.timePlaying
+
+    def getTotalLength(self):
+        return self.player.realTime
+
+    def showFrame(self):
+        frame = cv2.cvtColor(self.player.getFrame(), cv2.COLOR_BGR2RGB)
+        self.bmp.CopyFromBuffer(frame)
+        self.Refresh()
+
+    # Event catcher
+    def OnTimer(self, evt):
+        """
+        runs only if this is playing
+        """
+        self.player.OnWxTimer(self.playing)
+        if not self.playing or self.drawing:
+            return
+        self.showFrame()
+
+    def OnPaint(self, evt):
+        self.drawing = True
+
+        dc = wx.BufferedPaintDC(self)
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        wSize = self.GetSize()
+        bmpSize = self.bmp.GetScaledSize()
+        corner, ratio = putRectangle(*bmpSize, wSize, 1)
+        bmpSize = toInts([bmpSize.x * ratio, bmpSize.y * ratio])
+        gc.DrawBitmap(self.bmp, *corner, *bmpSize)
+
+        self.drawing = False
+
+    def OnNextFrame(self, evt):
+        if not self.playing:
+            frame = cv2.cvtColor(self.player.viewNextNFrame(1), cv2.COLOR_BGR2RGB)
+            self.bmp.CopyFromBuffer(frame)
+            self.Refresh()
+
+    def OnPreviousFrame(self, evt):
+        if not self.playing:
+            frame = cv2.cvtColor(self.player.viewNextNFrame(-1), cv2.COLOR_BGR2RGB)
+            self.bmp.CopyFromBuffer(frame)
+            self.Refresh()
+
+class ShowCapture2(wx.Panel):
+    def __init__(self, parent, captures=None, fps=60):
         wx.Panel.__init__(self, parent)
 
         self.drawing = False
         self.period = round(1000 / fps)
 
-        self.capture = None  # capture
+        self.player = StreamPlayer(captures, fps)
+
         self.bmp = None  # wx.Bitmap
         # ret, frame = self.capture.read()
 
         # height, width = frame.shape[:2]
-        if capture is not None:
-            self.SetBitmap(capture)
+            # if capture is not None:
+            #     self.SetBitmap(capture)
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         #
         # # self.bmp = wx.BitmapFromBuffer(width, height, frame)

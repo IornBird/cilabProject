@@ -1,4 +1,5 @@
 import wx
+from ViewerPanes.ScoreSet import ScoreSetPane
 from ViewerPanes.ScoreBar import ScoreBar
 from ViewerPanes.VideoPane import VideoPane
 from TechRecord import TechRecord
@@ -29,7 +30,7 @@ class JudgeViewer(wx.Panel):
         if True:  # set detail for hrSpliter
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
-                self.techList = ScoreBar(vtSpliter, wx.VERTICAL, self.passTime)
+                self.techList = ScoreSetPane(vtSpliter)
                 self.videoPane = VideoPane(vtSpliter, self.needReload)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.techList, self.videoPane)

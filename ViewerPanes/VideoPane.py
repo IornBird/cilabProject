@@ -6,7 +6,7 @@ from PublicFunctions import *
 from ViewerPanes.stream import *
 
 class VideoPane(wx.Panel):
-    def __init__(self, parent, passTo):
+    def __init__(self, parent, streams: list[str], passTo):
         self.setPrivateMembers(passTo)
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
@@ -15,7 +15,8 @@ class VideoPane(wx.Panel):
 
 
         # stream
-        self.stream = self.mode[1]  # wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
+        self.stream = ShowCapture(self, streams)
+            # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
         # self.stream.Load(self.videos[1])
         # self.stream.SetPlaybackRate(1)
         # self.stream.SetVolume(1)
@@ -83,7 +84,7 @@ class VideoPane(wx.Panel):
         pass
 
     def setPrivateMembers(self, passTo):
-        self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
+        # self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
@@ -104,23 +105,23 @@ class VideoPane(wx.Panel):
         """
         :return: time video playing, in milliseconds
         """
-        return self.stream.Tell()
+        return self.stream.getPlayingTime() #  Tell()
 
     def setPlayingTime(self, time: int):
         """
         :param time: time set to play from
         """
-        self.stream.Seek(time)
+        self.stream.setTime(time)  # Seek(time)
 
     def getVideoLength(self):
         """
         :return: length of video in milliseconds
         """
-        return self.stream.Length()
+        return self.stream.getTotalLength()  # Length()
 
     # Event Catcher
     def OnPlay(self, event):
-        self.playing = (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
+        self.playing = self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
         self.timeSlider.SetMax(self.getVideoLength())
         if self.playing:
             self.stream.Pause()
@@ -136,15 +137,18 @@ class VideoPane(wx.Panel):
             self.cameraNo = len(self.videos) - 1
         self.cameraNum.SetValue(self.cameraNo)
 
-        self.stream.Load(self.videos[self.cameraNo])
+        # self.stream.Load(self.videos[self.cameraNo])
+        self.stream.switchStream(self.cameraNo)
         if not self.playing:
             self.stream.Play()
         self.passLoad()
 
     def OnSlideEnd(self, evt):
         position = self.timeSlider.GetValue()
-        self.stream.Seek(position)
-        [self.OnPlay(None) for i in range(2)]
+        # self.stream.Seek(position)
+        self.setPlayingTime(position)
+        # [self.OnPlay(None) for i in range(2)]
+        self.stream.showFrame()
         self.isSliding = False
 
     def OnSlide(self, evt):
@@ -152,10 +156,10 @@ class VideoPane(wx.Panel):
 
     def onTimer(self):
         if not self.isSliding:
-            now = self.stream.Tell()
-            length = self.stream.Length()
+            now = self.getPlayingTime()
+            length = self.getVideoLength()
             self.timeLabel.SetLabelText(getTimeFormate(now, length))
-            self.timeSlider.SetValue(self.stream.Tell())
+            self.timeSlider.SetValue(now)
 
 
 # m: ss.ss
