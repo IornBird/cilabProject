@@ -44,8 +44,8 @@ class ShowCapture(wx.Panel):
         self.player = StreamPlayer(captures, fps)
         self.timer = wx.Timer()
         self.bmp = None
-        self.SetBitmap()
-        self.timer.Start(self.period)
+        if self.SetBitmap():
+            self.timer.Start(self.period)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
     # Interfaces
@@ -86,6 +86,8 @@ class ShowCapture(wx.Panel):
         self.showFrame()
 
     def OnPaint(self, evt):
+        if self.bmp is None:
+            return
         self.drawing = True
 
         dc = wx.BufferedPaintDC(self)
@@ -114,12 +116,16 @@ class ShowCapture(wx.Panel):
     # Private functions
     def SetBitmap(self):
         ret, frame = self.player.cameras[self.player.camera_no].read()
-
+        if not ret:
+            return False
+            # raise ConnectionError("Connecting to stream failed")
         height, width = frame.shape[:2]
         self.GetParent().SetSize(width, height)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
+
+        return True
 
 class ShowCapture2(wx.Panel):
     def __init__(self, parent, captures=None, fps=60):

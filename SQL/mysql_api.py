@@ -21,6 +21,7 @@ def dump_table(table_name):
             print(row)
         db.commit()
     print(f'{command=} executed.')
+    return rows
 
 
 def init_db():
@@ -55,8 +56,8 @@ def init_db():
     
 def insert_db(table_name, values):
     '''
-    table_name: str
-    values: tuple
+    table_name: str, name of table to be appended
+    values:   tuple, values corresponding to column, respectively
     
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
@@ -70,14 +71,14 @@ def insert_db(table_name, values):
 
 def update_db(table_name, set_clause, where_clause):
     '''
-    table_name: str
-    set_clause: str
-    where_clause: str
+    table_name:    str, name of table to be updated
+    select_clause: str, column of result that will be modified
+    where_clause:  str, condition result must achieve
     
     Update TABLE set SET_CLAUSE where WHERE_CLAUSE
     '''
     command = f"Update {table_name} set {set_clause} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
+    db = MySQLdb.connect(host='localhost', user='root',  password=mysql_config['MySQL_password'], db='taekwondo')
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -86,14 +87,14 @@ def update_db(table_name, set_clause, where_clause):
     
 def select_db(table_name, select_clause, where_clause):
     '''
-    table_name: str
-    select_clause: str
-    where_clause: str
+    table_name:    str, name of table to be searched
+    select_clause: str, column of result that returned
+    where_clause:  str, condition result must achieve
     
     Select SELECT_CLAUSE from TABLE where WHERE_CLAUSE
     '''
     command = f"Select {select_clause} from {table_name} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
+    db = MySQLdb.connect(host='localhost', user='root',  password=mysql_config['MySQL_password'], db='taekwondo')
     with db:
         cur = db.cursor()
         cur.execute(command)
