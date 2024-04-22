@@ -123,7 +123,7 @@ class VideoPane(wx.Panel):
         """
         :return: time video playing, in milliseconds
         """
-        return self.stream.getPlayingTime() #  Tell()
+        return self.stream.getPlayingTime()  # Tell()
 
     def setPlayingTime(self, time: int):
         """
@@ -174,6 +174,7 @@ class VideoPane(wx.Panel):
 
     def onTimer(self):
         if not self.isSliding:
+            self.stream.OnTimer(None)
             now = self.getPlayingTime()
             length = self.getVideoLength()
             self.timeLabel.SetLabelText(getTimeFormate(now, length))

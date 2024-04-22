@@ -145,8 +145,22 @@ class AnalysisViewer(wx.Panel):
         :param baseData:
         :param analysisResult:
         """
-        self.changeTable(self.basicChat, baseData)
-        self.changeTable(self.resultChat, analysisResult)
+        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight'])
+        self.changeTable(self.resultChat, analysisResult, [
+            'ID',
+            'contest_num',
+            'contest_tot_secs',
+            'wins',
+            'win_rounds',
+            'lose_rounds',
+            'punches',
+            'kicks',
+            'suc_punches',
+            'suc_kicks',
+            'pts',
+            'vios',
+            'vio_lost_pts'
+        ])
         return
 
         # baseChat = wx.grid.Grid(self)
@@ -164,7 +178,7 @@ class AnalysisViewer(wx.Panel):
         # self.basicChat.SetTable(baseChat, True)
         # self.resultChat.SetTable(anaResult, True)
 
-    def changeTable(self, table: wx.grid.Grid, data: list[str]):
+    def changeTable(self, table: wx.grid.Grid, data: list[str], items: list[str]):
         """
         make data[i] to be in i-th row of table, all data are in 0-th column
         """
@@ -181,3 +195,5 @@ class AnalysisViewer(wx.Panel):
         # Set cell values
         for i, value in enumerate(data):
             table.SetCellValue(i, 0, str(value))
+        for i, item in enumerate(items):
+            table.SetRowLabelValue(i, item)

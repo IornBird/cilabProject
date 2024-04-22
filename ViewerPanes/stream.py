@@ -32,28 +32,42 @@ class ShowCapture(wx.Panel):
     def __init__(self, parent, streams: list[str], fps=60):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
-        captures = [cv2.VideoCapture(c) for c in streams]
+        #captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
+        # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+        captures = [cv2.VideoCapture(0)]
         for c in captures:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+            c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
 
         self.drawing = False
         self.period = round(1000 / fps)
         self.playing = False
 
         self.player = StreamPlayer(captures, fps)
-        self.timer = wx.Timer()
+        self.timer = None  # wx.Timer()
         self.bmp = None
-        if self.SetBitmap():
-            self.timer.Start(self.period)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
+        self.SetBitmap()
+        # self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
+        # if self.SetBitmap():
+        #     self.timer.Start(self.period)
+
     # Interfaces
+    def SetTimer(self, timer: wx.Timer):
+        self.timer = timer
+        # if not self.timer.IsRunning():
+        #     self.timer.Start(self.period)
+
     def Play(self):
         self.playing = True
+        # if not self.timer.IsRunning():
+        #     self.timer.Start(self.period)
 
     def Pause(self):
         self.playing = False
+        self.showFrame()
 
     def toRealTime(self, evt=None):
         self.player.setTime(0)
@@ -84,6 +98,7 @@ class ShowCapture(wx.Panel):
         if not self.playing or self.drawing:
             return
         self.showFrame()
+        # TODO: store last 10 sec video
 
     def OnPaint(self, evt):
         if self.bmp is None:

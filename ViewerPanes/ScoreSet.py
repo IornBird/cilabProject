@@ -2,7 +2,7 @@ import wx
 
 
 class ScoreSetPane(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, blueTech, redTech):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
 
@@ -12,10 +12,10 @@ class ScoreSetPane(wx.Panel):
         self.TimeLabel.Wrap(-1)
         bSizer1.Add(self.TimeLabel, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.blueScore = ScoreSet(self)
+        self.blueScore = ScoreSet(self, blueTech)
         bSizer1.Add(self.blueScore, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.redScore = ScoreSet(self)
+        self.redScore = ScoreSet(self, redTech)
         bSizer1.Add(self.redScore, 1, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(bSizer1)
@@ -27,7 +27,7 @@ class ScoreSetPane(wx.Panel):
 
 
 class ScoreSet(wx.Panel):
-    def __init__(self, parent):
+    def __init__(self, parent, techList):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(619, 148),
                           style=wx.TAB_TRAVERSAL)
 
@@ -42,17 +42,17 @@ class ScoreSet(wx.Panel):
         self.techLabel.Wrap(-1)
         gbSizer1.Add(self.techLabel, wx.GBPosition(1, 0), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
-        self.towardLabel = wx.StaticText(self, wx.ID_ANY, u"toWard", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.towardLabel = wx.StaticText(self, wx.ID_ANY, u"toward", wx.DefaultPosition, wx.DefaultSize, 0)
         self.towardLabel.Wrap(-1)
         gbSizer1.Add(self.towardLabel, wx.GBPosition(2, 0), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
-        techSelectChoices = [u"punch", u"kick", u"Punch", u"Kick", u"T. Kick", u"punch"]
+        techSelectChoices = [u"Punch", u"Kick", u"T. Kick"]
         self.techSelect = wx.ComboBox(self, wx.ID_ANY, u"Choose Tech", wx.DefaultPosition, wx.DefaultSize,
                                       techSelectChoices, 0)
         gbSizer1.Add(self.techSelect, wx.GBPosition(1, 1), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
         towardSelectChoices = [u"Trunk", u"Head"]
-        self.towardSelect = wx.ComboBox(self, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.DefaultSize,
+        self.towardSelect = wx.ComboBox(self, wx.ID_ANY, u"Choose toward", wx.DefaultPosition, wx.DefaultSize,
                                         towardSelectChoices, 0)
         gbSizer1.Add(self.towardSelect, wx.GBPosition(2, 1), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
@@ -73,4 +73,4 @@ class ScoreSet(wx.Panel):
 
     # Virtual event handlers, overide them in your derived class
     def OnValidSet(self, event):
-        event.Skip()
+        self.setValid.SetBitmap(wx.Bitmap(u"Images/notInvalid.png", wx.BITMAP_TYPE_ANY))

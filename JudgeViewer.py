@@ -6,14 +6,34 @@ from TechRecord import TechRecord
 
 import SQL.mysql_api as sql
 
+# demo
+IPs = ['192.168.100.127', '192.168.100.108']
+
+"""
+custom event
+myEVT_CUSTOM = wx.NewEventType()
+EVT_CUSTOM = wx.PyEventBinder(myEVT_CUSTOM, 1)
+
+class MyEvent(wx.PyCommandEvent):
+    def __init__(self, evtType, id):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        myVal = None
+
+    def SetMyVal(self, val):
+        self.myVal = val
+
+    def GetMyVal(self):
+        return self.myVal
+"""
+
 class JudgeViewer(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent)
         self.CreateControls()
         self.videoNotLoad = True
-        self.timer.Start(30)
+        self.timer.Start(round(1000 / 60))
         # demo
-        self.loadVideos(['192.168.10.236'])
+        self.loadVideos(IPs)
         # self.loadVideos([
         #     "C:\\Users\\User\\Downloads\\explaning.mp4",
         #     "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
@@ -31,8 +51,8 @@ class JudgeViewer(wx.Panel):
         if True:  # set detail for hrSpliter
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
-                self.techList = ScoreSetPane(vtSpliter)
-                self.videoPane = VideoPane(vtSpliter, ['192.168.10.236'], self.needReload)
+                self.techList = ScoreSetPane(vtSpliter, None, None)
+                self.videoPane = VideoPane(vtSpliter, IPs, self.needReload)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.techList, self.videoPane)
             self.timeLine = ScoreBar(hrSpliter, wx.HORIZONTAL, self.passTime)
@@ -62,6 +82,9 @@ class JudgeViewer(wx.Panel):
         if self.videoNotLoad:
             self.needReload()
         self.timeLine.setPlayingTime(now)
+
+    def OnDetected(self, evt):
+        pass
 
     def needReload(self):
         length = self.videoPane.getVideoLength()
