@@ -61,7 +61,7 @@ def get_contestant_stats(contestant_id):
     comp_stats = select_db('comp_stats', '*', f'contestant_id={contestant_id}')
     return comp_stats
 
-def get_all_constant_name():
+def get_all_contestant_name():
     '''
     return: list of tuple (contestant_id, name)
     '''
@@ -72,5 +72,6 @@ def analyze_log(log):
 
 
 if __name__ == '__main__':
-    pass
+    contestant_name = get_all_contestant_name()
+    print(contestant_name)
 

@@ -6,11 +6,12 @@ import dotenv
 
 mysql_config = dotenv.dotenv_values('.env')
 mysql_config['MySQL_password'] = mysql_config['MySQL_password'].replace('"', '')
+mysql_args = (mysql_config['MySQL_host'], mysql_config['MySQL_user'], mysql_config['MySQL_password'], mysql_config['MySQL_db'])
 
 
 def dump_table(table_name):
     command = f"Select * from {table_name}"
-    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
+    db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -19,10 +20,11 @@ def dump_table(table_name):
             print(row)
         db.commit()
     print(f'{command=} executed.')
+    return rows
 
 
 def init_db():
-    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
+    db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
         # TABLE contestant
@@ -59,7 +61,7 @@ def insert_db(table_name, values):
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
     command = f"Insert into {table_name} Values {values}"
-    db = MySQLdb.connect(host="localhost", user="root", password=mysql_config['MySQL_password'], db="taekwondo")
+    db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -75,7 +77,7 @@ def update_db(table_name, set_clause, where_clause):
     Update TABLE set SET_CLAUSE where WHERE_CLAUSE
     '''
     command = f"Update {table_name} set {set_clause} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
+    db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
         cur.execute(command)
@@ -90,8 +92,11 @@ def select_db(table_name, select_clause, where_clause):
     
     Select SELECT_CLAUSE from TABLE where WHERE_CLAUSE
     '''
-    command = f"Select {select_clause} from {table_name} where {where_clause}"
-    db = MySQLdb.connect(host='localhost', user='root',  password='NCUCSIE', db='taekwondo')
+    if where_clause == '':
+        command = f"Select {select_clause} from {table_name}"
+    else:
+        command = f"Select {select_clause} from {table_name} where {where_clause}"
+    db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
         cur.execute(command)
