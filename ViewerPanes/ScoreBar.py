@@ -94,6 +94,12 @@ class ScoreBar(wx.Panel):
             showRange = self.BlueList.timeInterval
             self.timeSpecifier.SetRange(0, showRange)
 
+    def findTechFrom(self, time: int):
+        """
+        :param time: length of video in milliseconds
+        :return : [tech on blue, tech on red], None if not found
+        """
+
 
     # Event Catchers
     def OnScroll(self, evt):

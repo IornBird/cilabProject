@@ -4,6 +4,8 @@
 import MySQLdb
 import dotenv
 
+#  dotenv.set_key('.env', 'MySQL_password', <PASSWORD>)
+
 mysql_config = dotenv.dotenv_values('.env')
 mysql_config['MySQL_password'] = mysql_config['MySQL_password'].replace('"', '')
 mysql_args = (mysql_config['MySQL_host'], mysql_config['MySQL_user'], mysql_config['MySQL_password'], mysql_config['MySQL_db'])
@@ -55,8 +57,8 @@ def init_db():
     
 def insert_db(table_name, values):
     '''
-    table_name: str
-    values: tuple
+    table_name: str, name of table to be appended
+    values:   tuple, values corresponding to column, respectively
     
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
@@ -70,9 +72,9 @@ def insert_db(table_name, values):
 
 def update_db(table_name, set_clause, where_clause):
     '''
-    table_name: str
-    set_clause: str
-    where_clause: str
+    table_name:    str, name of table to be updated
+    select_clause: str, column of result that will be modified
+    where_clause:  str, condition result must achieve
     
     Update TABLE set SET_CLAUSE where WHERE_CLAUSE
     '''
@@ -86,9 +88,9 @@ def update_db(table_name, set_clause, where_clause):
     
 def select_db(table_name, select_clause, where_clause):
     '''
-    table_name: str
-    select_clause: str
-    where_clause: str
+    table_name:    str, name of table to be searched
+    select_clause: str, column of result that returned
+    where_clause:  str, condition result must achieve
     
     Select SELECT_CLAUSE from TABLE where WHERE_CLAUSE
     '''

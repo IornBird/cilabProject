@@ -6,7 +6,7 @@ from PublicFunctions import *
 from ViewerPanes.stream import *
 
 class VideoPane(wx.Panel):
-    def __init__(self, parent, passTo):
+    def __init__(self, parent, streams: list[str], passTo):
         self.setPrivateMembers(passTo)
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
@@ -15,10 +15,11 @@ class VideoPane(wx.Panel):
 
 
         # stream
-        self.stream = wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
-        self.stream.Load(self.videos[1])
-        self.stream.SetPlaybackRate(1)
-        self.stream.SetVolume(1)
+        self.stream = ShowCapture(self, streams)
+            # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
+        # self.stream.Load(self.videos[1])
+        # self.stream.SetPlaybackRate(1)
+        # self.stream.SetVolume(1)
         # self.stream.ShowPlayerControls()
         vidoeSizer.Add(self.stream, 1, wx.ALL | wx.EXPAND, 5)
 
@@ -33,9 +34,23 @@ class VideoPane(wx.Panel):
         self.playBar = wx.ToolBar(self.PlayPanel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TB_HORIZONTAL)
         self.playBar.SetFont(wx.Font(wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, wx.EmptyString))
 
-        self.playButtom = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                               wx.Bitmap(u"Images\\playButtom.png", wx.BITMAP_TYPE_ANY),
-                                               wx.NullBitmap, wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+        self.playButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\playButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.toRealTimeButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\toRealTimeButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.preFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\preFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.nxtFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
+                                                    wx.Bitmap(u"Images\\nxtFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+
+        self.playBar.Realize()
 
         self.playBar.Realize()
 
@@ -74,7 +89,11 @@ class VideoPane(wx.Panel):
         self.Layout()
 
         # Connect Events
-        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButtom)
+        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
+
         self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
         self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
@@ -83,6 +102,7 @@ class VideoPane(wx.Panel):
         pass
 
     def setPrivateMembers(self, passTo):
+        # self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
@@ -103,23 +123,23 @@ class VideoPane(wx.Panel):
         """
         :return: time video playing, in milliseconds
         """
-        return self.stream.Tell()
+        return self.stream.getPlayingTime()  # Tell()
 
     def setPlayingTime(self, time: int):
         """
         :param time: time set to play from
         """
-        self.stream.Seek(time)
+        self.stream.setTime(time)  # Seek(time)
 
     def getVideoLength(self):
         """
         :return: length of video in milliseconds
         """
-        return self.stream.Length()
+        return self.stream.getTotalLength()  # Length()
 
     # Event Catcher
     def OnPlay(self, event):
-        self.playing = (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
+        self.playing = self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
         self.timeSlider.SetMax(self.getVideoLength())
         if self.playing:
             self.stream.Pause()
@@ -135,15 +155,18 @@ class VideoPane(wx.Panel):
             self.cameraNo = len(self.videos) - 1
         self.cameraNum.SetValue(self.cameraNo)
 
-        self.stream.Load(self.videos[self.cameraNo])
+        # self.stream.Load(self.videos[self.cameraNo])
+        self.stream.switchStream(self.cameraNo - 1)
         if not self.playing:
             self.stream.Play()
         self.passLoad()
 
     def OnSlideEnd(self, evt):
         position = self.timeSlider.GetValue()
-        self.stream.Seek(position)
-        [self.OnPlay(None) for i in range(2)]
+        # self.stream.Seek(position)
+        self.setPlayingTime(position)
+        # [self.OnPlay(None) for i in range(2)]
+        self.stream.showFrame()
         self.isSliding = False
 
     def OnSlide(self, evt):
@@ -151,10 +174,11 @@ class VideoPane(wx.Panel):
 
     def onTimer(self):
         if not self.isSliding:
-            now = self.stream.Tell()
-            length = self.stream.Length()
+            self.stream.OnTimer(None)
+            now = self.getPlayingTime()
+            length = self.getVideoLength()
             self.timeLabel.SetLabelText(getTimeFormate(now, length))
-            self.timeSlider.SetValue(self.stream.Tell())
+            self.timeSlider.SetValue(now)
 
 
 # m: ss.ss

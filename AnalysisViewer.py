@@ -117,9 +117,21 @@ class AnalysisViewer(wx.Panel):
     def Destroy(self):
         super().Destroy()
 
+    # Interfaces
+    def importAllData(self):
+        # SELECT * FROM `contestant`
+        lst = sql.select_db('contestant', '*', '1')  # ((1, 'Yume Nijino', 'Japan'), (2, 'Vegeta', 'Planet Vegeta'))
+        # self.contestantChoice.Create(self.anaDataPane, wx.ID_ANY, choices=[c[1] for c in lst])
+        self.contestantChoice.Set([c[1] for c in lst])
+
     # Virtual event handlers, override them in your derived class
     def OnChoiceName(self, event):
-        event.Skip()
+        name = self.contestantChoice.GetStringSelection()
+        id = sql.select_db('contestant', 'id', f"name='{name}'")[0][0]
+        baseData = sql.select_db('body_stats', '*', f"contestant_id={id}")
+        anaResult = sql.select_db('comp_stats', '*', f"contestant_id={id}")
+        self.importOneData(name, baseData[0], anaResult[0])
+
 
     # private functions
     def getData(self):
@@ -127,23 +139,61 @@ class AnalysisViewer(wx.Panel):
         # importData()
         # get_contestant_status()
 
-    def importData(self, name: str, baseData, analysisResult):
+    def importOneData(self, name: str, baseData, analysisResult):
         """
         :param name: name of ONE contestant
         :param baseData:
         :param analysisResult:
         """
-        baseChat = wx.grid.Grid()
-        baseChat.CreateGrid(len(baseData), 1)
-        for i, c in enumerate(baseData):
-            baseChat.SetCellValue(i, 0, c)
+        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight'])
+        self.changeTable(self.resultChat, analysisResult, [
+            'ID',
+            'contest_num',
+            'contest_tot_secs',
+            'wins',
+            'win_rounds',
+            'lose_rounds',
+            'punches',
+            'kicks',
+            'suc_punches',
+            'suc_kicks',
+            'pts',
+            'vios',
+            'vio_lost_pts'
+        ])
+        return
 
-        anaResult = wx.grid.Grid()
-        anaResult.CreateGrid(len(analysisResult), 1)
-        for i, c in enumerate(analysisResult):
-            anaResult.SetCellValue(i, 0, c)
+        # baseChat = wx.grid.Grid(self)
+        # baseChat.CreateGrid(len(baseData), 1)
+        # for i, c in enumerate(baseData):
+        #     baseChat.SetCellValue(i, 0, str(c))
+        #
+        # anaResult = wx.grid.Grid(self)
+        # anaResult.CreateGrid(len(analysisResult), 1)
+        # for i, c in enumerate(analysisResult):
+        #     anaResult.SetCellValue(i, 0, str(c))
+        #
+        # # self.contestantChoice.Append(name)
+        # # self.contestantChoice.SetSelection(self.contestantChoice.FindString(name, True))
+        # self.basicChat.SetTable(baseChat, True)
+        # self.resultChat.SetTable(anaResult, True)
 
-        self.contestantChoice.Append(name)
-        self.contestantChoice.SetSelection(self.contestantChoice.FindString(name, True))
-        self.basicChat.AssignTable(baseChat)
-        self.resultChat.SetTable(anaResult)
+    def changeTable(self, table: wx.grid.Grid, data: list[str], items: list[str]):
+        """
+        make data[i] to be in i-th row of table, all data are in 0-th column
+        """
+        current_rows = table.GetNumberRows()
+        new_rows = len(data)
+
+        # If new data has more rows, append rows
+        if new_rows > current_rows:
+            table.AppendRows(new_rows - current_rows)
+        # If new data has fewer rows, delete rows
+        elif new_rows < current_rows:
+            table.DeleteRows(new_rows, current_rows - new_rows)
+
+        # Set cell values
+        for i, value in enumerate(data):
+            table.SetCellValue(i, 0, str(value))
+        for i, item in enumerate(items):
+            table.SetRowLabelValue(i, item)
