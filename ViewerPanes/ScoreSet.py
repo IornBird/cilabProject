@@ -1,5 +1,5 @@
 import wx
-
+from TechRecord import *
 
 class ScoreSetPane(wx.Panel):
     def __init__(self, parent, blueTech, redTech):
@@ -21,9 +21,31 @@ class ScoreSetPane(wx.Panel):
         self.SetSizer(bSizer1)
         self.Layout()
 
+        # data structures
+        self.techList = None  # pointer of tech-record on JudgeViewer
+
     # Interfaces
     def SetTimer(time: int):
         pass
+
+    def setTechRecoed(self, record: tuple):
+        """
+        :param record: pointer of tech-record on JudgeViewer
+        """
+        self.techList = record
+
+    def findTech(self, time: int):
+        """
+        find tech used on both side at time
+        :param time: time since round begins, in ms
+        :return: [tech of blue, tech of red]. Any of them be None if not found
+        """
+
+    def setTech(self, redTech, blueTech):
+        """
+        :param redTech, blueTech: id of tech used on both side at time, found in JudgeViewer.Timeline
+            e.g. if (0, 1) passed, that means record[0][0] and record[0][1] will be used
+        """
 
 
 class ScoreSet(wx.Panel):
@@ -70,6 +92,7 @@ class ScoreSet(wx.Panel):
 
         # Connect Events
         self.setValid.Bind(wx.EVT_BUTTON, self.OnValidSet)
+
 
     # Virtual event handlers, overide them in your derived class
     def OnValidSet(self, event):

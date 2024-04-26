@@ -4,45 +4,47 @@ from ViewerPanes.TechBar import TechBar
 from TechRecord import TechRecord
 
 class ScoreBar(wx.Panel):
-    def __init__(self, parent, style, passTo):
+    def __init__(self, parent, record):
         super().__init__(parent)
 
-        self.isH = False
-        self.record = [("name1", []), ("name2", [])]
+        self.scroll = None         # top    of all | wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
+
+        self.BlueScore = None      # left  top     | ScorePane(self, True)
+        self.BlueList = None       # right top     | TechBar(self)
+        self.RedScore = None       # left  bottom  | ScorePane(self, False)
+        self.RedList = None        # right bottom  | TechBar(self)
+
+        self.timeSpecifier = None  # bottom of all | wx.Slider(self)
+
+        self.record = record
         self.playingTime = 0
         self.videoLength = 0
-        self.passTime = passTo
 
-        if style == wx.HORIZONTAL:
-            Lst = [(c // 2 + 1, c % 2) for c in range(4)]
-            SclPlc = [(3, 0), (1, 2)]
-            self.isH = True
-        elif style == wx.VERTICAL:
-            Lst = [(c % 2, c // 2) for c in range(4)]
-            SclPlc = [(0, 2), (2, 1)]
-            self.isH = False
-        else:
-            raise ValueError("Please specify the arrangement.")
+        self.modified = False
+
+        Lst = [(c // 2 + 1, c % 2) for c in range(4)]
+        SclPlc = [(3, 0), (1, 2)]
         self.CreateControls(Lst, SclPlc)
+
         self.Bind(wx.EVT_PAINT, self.OnPaint, self)
         self.Bind(wx.EVT_SCROLL, self.OnScroll, self.scroll)
-        if self.isH:
-            self.sliding = False
-            self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlideBegin, self.timeSpecifier)
-            self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSpecifier)
+
+        self.sliding = False
+        self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlideBegin, self.timeSpecifier)
+        self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSpecifier)
 
     def CreateControls(self, Lst, SclPlc):
         self.sizer = wx.GridBagSizer(1, 1)
         if True:
             self.BlueScore = ScorePane(self, True)
-            self.BlueList = TechBar(self, self.isH)
+            self.BlueList = TechBar(self)
             self.RedScore = ScorePane(self, False)
-            self.RedList = TechBar(self, self.isH)
-            self.scroll = wx.ScrollBar(self, style=
-                wx.SB_HORIZONTAL if self.isH else wx.SB_VERTICAL)
-        if self.isH:
-            self.timeSpecifier = wx.Slider(self)
-            self.sizer.Add(self.timeSpecifier, (0, 1), (1, 1), wx.EXPAND | wx.ALL)
+            self.RedList = TechBar(self)
+            self.scroll = wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
+
+        self.timeSpecifier = wx.Slider(self)
+        self.sizer.Add(self.timeSpecifier, (0, 1), (1, 1), wx.EXPAND | wx.ALL)
+
         self.sizer.Add(self.BlueScore, Lst[0], (1, 1), wx.CENTER | wx.EXPAND | wx.ALL)
         self.sizer.Add(self.BlueList, Lst[1], (1, 1), wx.EXPAND | wx.ALL)
         self.sizer.Add(self.RedScore, Lst[2], (1, 1), wx.CENTER | wx.EXPAND | wx.ALL)
@@ -50,19 +52,15 @@ class ScoreBar(wx.Panel):
         self.sizer.Add(self.scroll, SclPlc[0], SclPlc[1], wx.EXPAND | wx.ALL)
         self.SetSizerAndFit(self.sizer)
 
-        if self.isH:
-            self.sizer.AddGrowableRow(1)
-            self.sizer.AddGrowableRow(2)
-            self.sizer.AddGrowableCol(1)
-        else:
-            self.sizer.AddGrowableCol(0)
-            self.sizer.AddGrowableCol(1)
-            self.sizer.AddGrowableRow(1)
+        self.sizer.AddGrowableRow(1)
+        self.sizer.AddGrowableRow(2)
+        self.sizer.AddGrowableCol(1)
+
         self.sizer.SetMinSize(50, 50)
         self.SetSizerAndFit(self.sizer)
 
     # Interfaces
-    def setTechRecord(self, records: tuple[str, list[TechRecord]]):
+    def setTechRecord(self, records: tuple):
         """
         :param records: movements of both contestant
                format is ([name1, record1], [name2, record2])
@@ -77,7 +75,18 @@ class ScoreBar(wx.Panel):
         """
         if self.playingTime != time:
             self.playingTime = time
-            self.Refresh()
+            self.render()
+
+            # self.Refresh()
+
+    def getSetTime(self):
+        """
+        :return: time user set on this pane, -1 if user didn't set.
+        """
+        if self.modified:
+            return self.playingTime
+        return -1
+
 
     def setVideoLength(self, time: int):
         """
@@ -90,9 +99,8 @@ class ScoreBar(wx.Panel):
             time,
             self.scroll.GetPageSize()
         )
-        if self.isH:
-            showRange = self.BlueList.timeInterval
-            self.timeSpecifier.SetRange(0, showRange)
+        showRange = self.BlueList.timeInterval
+        self.timeSpecifier.SetRange(0, showRange)
 
     def findTechFrom(self, time: int):
         """
@@ -100,18 +108,20 @@ class ScoreBar(wx.Panel):
         :return : [tech on blue, tech on red], None if not found
         """
 
-
     # Event Catchers
     def OnScroll(self, evt):
         val = self.scroll.GetThumbPosition()
         self.RedList.setTimeRange(val)
         self.BlueList.setTimeRange(val)
+
+        self.modified = True
         self.Refresh()
 
     def OnTimer(self):
-        pass
+        self.modified = False
 
     def OnSlideBegin(self, evt):
+        self.modified = True
         self.sliding = True
 
     def OnSlideEnd(self, evt):
@@ -119,19 +129,18 @@ class ScoreBar(wx.Panel):
         now = self.BlueList.setFromSlider(v)
         self.RedList.setFromSlider(v)
         self.setPlayingTime(now)
-        self.passTime(now)
         self.sliding = False
 
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
         dc.Clear()
-        self.render(dc)
+        # self.render(dc)
 
     # Private Functions
-    def render(self, dc):
+    def render(self):
         self.RedList.setTechList(self.record[0][1])
         self.BlueList.setTechList(self.record[1][1])
-        if self.isH and not self.sliding:
+        if not self.sliding:
             self.timeSpecifier.SetValue(self.getSliderValue())
 
     def getSliderValue(self):

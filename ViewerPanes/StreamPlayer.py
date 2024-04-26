@@ -45,7 +45,7 @@ class StreamPlayer:
         """
         show the n-th frame if the frame at self.timePlaying is 0-th
         n can be negative, like -1 means previous frame
-        It's called only when the player is paused
+        It's called only when the player is gamePaused
         :returns : n-th frame after frame at self.timePlaying
         """
         self.timePlaying += n * self.frameLen

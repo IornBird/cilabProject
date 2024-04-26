@@ -5,18 +5,50 @@ import wx.media
 from PublicFunctions import *
 from ViewerPanes.stream import *
 
+GUI_OBJ = None
+
 class VideoPane(wx.Panel):
     def __init__(self, parent, streams: list[str], passTo):
-        self.setPrivateMembers(passTo)
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
+        self.setPrivateMembers()
 
+        # stream
+        self.stream = GUI_OBJ  # top | ShowCapture(self, streams)
+
+        # playing options
+        self.playButton = GUI_OBJ        # self.playBar.AddTool(...)
+        self.toRealTimeButton = GUI_OBJ  # self.playBar.AddTool(...)
+        self.preFrameButton = GUI_OBJ    # self.playBar.AddTool(...)
+        self.nxtFrameButton = GUI_OBJ    # self.playBar.AddTool(...)
+
+        # time set
+        self.timeLabel = GUI_OBJ         # bottom right | wx.StaticText(text=u"0:00.00 / -0:00.00")
+        self.timeSlider = GUI_OBJ        # center       | wx.Slider
+        self.cameraNum = GUI_OBJ         # wx.SpinCtrl(...)
+
+        self.CreateControls(streams)
+
+        # Connect Events
+        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
+        self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
+
+        self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
+        self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
+        self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
+
+    def Destroy(self):
+        self.stream.Pause()
+        super().Destroy()
+
+    def CreateControls(self, streams):
         vidoeSizer = wx.BoxSizer(wx.VERTICAL)
-
 
         # stream
         self.stream = ShowCapture(self, streams)
-            # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
+        # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
         # self.stream.Load(self.videos[1])
         # self.stream.SetPlaybackRate(1)
         # self.stream.SetVolume(1)
@@ -35,22 +67,24 @@ class VideoPane(wx.Panel):
         self.playBar.SetFont(wx.Font(wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, wx.EmptyString))
 
         self.playButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                                    wx.Bitmap(u"Images\\playButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
-                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+                                               wx.Bitmap(u"Images\\playButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
+                                               wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
 
         self.toRealTimeButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                                    wx.Bitmap(u"Images\\toRealTimeButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
-                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+                                                     wx.Bitmap(u"Images\\toRealTimeButton.png", wx.BITMAP_TYPE_ANY),
+                                                     wx.NullBitmap,
+                                                     wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
 
         self.preFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                                    wx.Bitmap(u"Images\\preFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
-                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+                                                   wx.Bitmap(u"Images\\preFrameButton.png", wx.BITMAP_TYPE_ANY),
+                                                   wx.NullBitmap,
+                                                   wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
 
         self.nxtFrameButton = self.playBar.AddTool(wx.ID_ANY, u"tool",
-                                                    wx.Bitmap(u"Images\\nxtFrameButton.png", wx.BITMAP_TYPE_ANY), wx.NullBitmap,
-                                                    wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
-
-        self.playBar.Realize()
+                                                   wx.Bitmap(u"Images\\nxtFrameButton.png", wx.BITMAP_TYPE_ANY),
+                                                   wx.NullBitmap,
+                                                   wx.ITEM_NORMAL, wx.EmptyString, wx.EmptyString, None)
+        self.playBar.SetBackgroundColour(self.PlayPanel.GetBackgroundColour())
 
         self.playBar.Realize()
 
@@ -88,30 +122,19 @@ class VideoPane(wx.Panel):
         self.SetSizer(vidoeSizer)
         self.Layout()
 
-        # Connect Events
-        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
-        self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
-        self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
-        self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
-
-        self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
-        self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
-        self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
-
-    def __del__(self):
-        pass
-
-    def setPrivateMembers(self, passTo):
+    def setPrivateMembers(self):
         # self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
+        self.streaming = True
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
         self.cameraNo = 1
-        self.passLoad = passTo
+        # self.passLoad = passTo
 
     # Interfaces
     def setVideos(self, videos: list[str]):
         """
+        set ALL video that will be switch to
         :param videos:
         """
         self.videos = [None]
@@ -129,7 +152,8 @@ class VideoPane(wx.Panel):
         """
         :param time: time set to play from
         """
-        self.stream.setTime(time)  # Seek(time)
+        wx.CallAfter(self.stream.setTime, time)  # Seek(time)
+        wx.CallAfter(self.onTimer)
 
     def getVideoLength(self):
         """
@@ -159,7 +183,7 @@ class VideoPane(wx.Panel):
         self.stream.switchStream(self.cameraNo - 1)
         if not self.playing:
             self.stream.Play()
-        self.passLoad()
+        # self.passLoad()  # <-HERE
 
     def OnSlideEnd(self, evt):
         position = self.timeSlider.GetValue()

@@ -1,27 +1,51 @@
 # not a part of project
 import wx
+from PublicFunctions import *
 
 
 class theFrame(wx.Frame):
     def __init__(self, title: str, size):
         super().__init__(parent=None, id=wx.ID_ANY, title=title, size=size)
-        panels = [
-            wx.Panel(self, size=(300, 100)),
-            wx.Panel(self, size=(200, 50)),
-            wx.Panel(self),
-            wx.Panel(self)
-        ]
-        sizer = wx.GridBagSizer()
-        L = [(1, 1), (0, 0), (1, 2), (2, 2)]
-        S = [(3, 1), (2, 1), (1, 1), (1, 1)]
-        for i, c in enumerate(panels):
-            c.SetBackgroundColour(wx.Colour(*[i * 64 for f in range(3)]))
-            sizer.Add(c, L[i], S[i], wx.EXPAND, 5)
-        sizer.AddGrowableCol(1)
-        sizer.AddGrowableRow(1)
+
+        sizer = wx.BoxSizer()
+        self.panel = APane(self)
+
+        sizer.Add(self.panel, 1, wx.EXPAND)
         self.SetSizerAndFit(sizer)
-        for c in panels:
-            print(c.GetSize())
+
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+        self.SetFocus()
+
+    def OnKey(self, evt):
+        assert isinstance(evt, wx.KeyEvent)
+        code = evt.GetKeyCode()
+        print("key down:", code)
+        if code == ord(' '):
+            self.Refresh()
+
+
+class APane(wx.Panel):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.SetFont(wx.Font(wx.FontInfo(32).FaceName("Times New Roman")))
+        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+    def OnPaint(self, evt):
+        dc = wx.AutoBufferedPaintDC(self)
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        assert isinstance(gc, wx.GraphicsContext)
+        tf = wx.AffineMatrix2D()
+        gc.SetFont(self.GetFont(), wx.BLACK)
+        size = self.GetTextExtent("Hello world")
+
+        c, times = putRectangle(*size, self.GetSize())
+        tf.Translate(*c)
+        tf.Scale(times, times)
+        gc.SetTransform(gc.CreateMatrix(tf))
+
+        gc.DrawText("Hello world", 0, 0)
 
 
 if __name__ == '__main__':

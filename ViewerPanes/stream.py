@@ -4,6 +4,8 @@ import cv2
 from PublicFunctions import *
 from ViewerPanes.StreamPlayer import *
 
+import threading
+
 # this class has not used yet
 class CapFrame(wx.Frame):
     def __init__(self, ip_cam):
@@ -33,8 +35,8 @@ class ShowCapture(wx.Panel):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
         #captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
-        # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
-        captures = [cv2.VideoCapture(0)]
+        captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+        # captures = [cv2.VideoCapture(1)]
         for c in captures:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -86,8 +88,9 @@ class ShowCapture(wx.Panel):
 
     def showFrame(self):
         frame = cv2.cvtColor(self.player.getFrame(), cv2.COLOR_BGR2RGB)
+
         self.bmp.CopyFromBuffer(frame)
-        self.Refresh()
+        # self.Refresh()
 
     # Event catcher
     def OnTimer(self, evt):
@@ -120,13 +123,13 @@ class ShowCapture(wx.Panel):
         if not self.playing:
             frame = cv2.cvtColor(self.player.viewNextNFrame(1), cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
-            self.Refresh()
+            # self.Refresh()
 
     def OnPreviousFrame(self, evt):
         if not self.playing:
             frame = cv2.cvtColor(self.player.viewNextNFrame(-1), cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
-            self.Refresh()
+            # self.Refresh()
 
     # Private functions
     def SetBitmap(self):
