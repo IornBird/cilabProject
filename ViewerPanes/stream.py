@@ -1,4 +1,3 @@
-from typing import Literal
 import wx
 import cv2
 
@@ -35,7 +34,7 @@ class ShowCapture(wx.Panel):
         self.SetBackgroundColour(wx.BLACK)
         #captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
-        captures = [cv2.VideoCapture(i) for i in (0, 1)]
+        captures = [cv2.VideoCapture(0)]
         for c in captures:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -237,7 +236,8 @@ def cv2ShowCapture(cam, fps=60):
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
     # capture.set(cv2.CAP_PROP_FPS, 15)
     fps = capture.get(cv2.CAP_PROP_FPS)
-    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+    capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+
     
     while True:
         ret, frame = capture.read()
@@ -252,7 +252,6 @@ def cv2ShowCapture(cam, fps=60):
 
 def wxShowCapture(parent, cam, fps=60):
     capture = cv2.VideoCapture(cam)
-
     fr = capture.read()[1]
     w, h = fr.shape[:2]
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
@@ -260,12 +259,14 @@ def wxShowCapture(parent, cam, fps=60):
     # capture.set(cv2.CAP_PROP_FPS, fps)
     # fps = capture.get(cv2.CAP_PROP_FPS)
     # capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-    return ShowCapture2(parent, capture, fps)
+
+    return ShowCapture(parent, capture, fps)
+
 
 def test_s5():
     import sys
     import os
-    ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../"
+    ROOT = os.path.dirname(os.path.abspath(__file__))+"/../"
     sys.path.append(ROOT)
     import importlib
     s5_test = importlib.import_module('Realtime-Action-Recognition-master.src.s5_test')
@@ -277,7 +278,7 @@ def test_s5():
     video_path = fr'D:\NCU\Special_Project\Taekwondo_media\self_rec\FHD-240FPS\cut\BackKickLeft\BackKickLeft_12.mp4'
     output_path = fr'D:\NCU\Special_Project\cilabProject\Realtime-Action-Recognition-master\output'
     out_folder = video_path.split('\\')[-1][: -4]
-    out_vid_path = output_path + '\\' + out_folder + '\\' + out_folder + '.avi'
+    out_vid_path = output_path +  '\\' + out_folder + '\\' + out_folder + '.avi'
     ip = '192.168.219.229'
     port = '8080'
     https_cam = f'https://{ip}:{port}/video'
@@ -287,38 +288,42 @@ def test_s5():
     # s5_test_main_thread = threading.Thread(target=s5_test_main, args=s5_test_main_args)
     # s5_test_main_thread.start()
     s5_test_main(*s5_test_main_args)
-        # wx_model_output_args = (out_vid_path, 240)
+    # wx_model_output_args = (out_vid_path, 240)
     # app = wx.App()
     # frame = wx.Frame(None)
+    # model_out = wxShowCapture(frame, *wx_model_output_args)
     # frame.Show()
     # app.MainLoop()
 
-if __name__ == '__main__':
-    ip = '192.168.10.236'
+
+def test_ip_cam():
+    ip = '192.168.219.229'
     ip2 = '192.168.20.225'
     port = '8080'
+    # cv2.VideoCapture('rtsp://username:password@192.168.1.64/1')
     https_cam = f'https://{ip}:{port}/video'
     # https_cam2 = f'https://{ip2}:{port}/video'
     rtsp_cam = f'rtsp://{ip}:{port}/h264_ulaw.sdp'
-    
-    cam_fps = 60
-    
-    # cv2ShowCapture(rtsp_cam)
+
+    # cv2ShowCapture(https_cam)
 
     app = wx.App()
     frame = wx.Frame(None)
     sizer = wx.BoxSizer(wx.HORIZONTAL)
     cap1 = wxShowCapture(frame, https_cam, 30)
     # cap2 = wxShowCapture(frame, https_cam2)
-    cap1 = wxShowCapture(frame, https_cam, cam_fps)
-    # cap2 = wxShowCapture(frame, https_cam2, cam_fps)
     sizer.Add(cap1, 1, wx.EXPAND)
     # sizer.Add(cap2, 1, wx.EXPAND)
     frame.SetSizer(sizer)
     frame.Show()
     app.MainLoop()
-    # if __name__ == '__main__':
-    #     # test_ip_cam()
-    #
-    #     test_s5()
+
+if __name__ == '__main__':
+    # test_ip_cam()
+
+    test_s5()
+
+
+
+
 
