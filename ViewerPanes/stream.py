@@ -232,6 +232,8 @@ class ShowCapture2(wx.Panel):
 
 def cv2ShowCapture(cam, fps=60):
     capture = cv2.VideoCapture(cam)
+    w = 320
+    h = 240
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, w)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, h)
     # capture.set(cv2.CAP_PROP_FPS, 15)
