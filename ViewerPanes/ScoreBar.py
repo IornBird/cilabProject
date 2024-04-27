@@ -30,16 +30,17 @@ class ScoreBar(wx.Panel):
         self.Bind(wx.EVT_SCROLL, self.OnScroll, self.scroll)
 
         self.sliding = False
-        self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlideBegin, self.timeSpecifier)
+        self.Bind(wx.EVT_SLIDER, self.OnSlide, self.timeSpecifier)
+        # self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlideBegin, self.timeSpecifier)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSpecifier)
 
     def CreateControls(self, Lst, SclPlc):
         self.sizer = wx.GridBagSizer(1, 1)
         if True:
             self.BlueScore = ScorePane(self, True)
-            self.BlueList = TechBar(self)
+            self.BlueList = TechBar(self, self.record[0][1])
             self.RedScore = ScorePane(self, False)
-            self.RedList = TechBar(self)
+            self.RedList = TechBar(self, self.record[1][1])
             self.scroll = wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
 
         self.timeSpecifier = wx.Slider(self)
@@ -73,11 +74,13 @@ class ScoreBar(wx.Panel):
         """
         :param time: in milliseconds since the video begins
         """
+        if time < 0:
+            time = ~time
         if self.playingTime != time:
             self.playingTime = time
-            self.render()
+            self.Refresh()
+            self.modified = False
 
-            # self.Refresh()
 
     def getSetTime(self):
         """
@@ -101,6 +104,7 @@ class ScoreBar(wx.Panel):
         )
         showRange = self.BlueList.timeInterval
         self.timeSpecifier.SetRange(0, showRange)
+        self.render()
 
     def findTechFrom(self, time: int):
         """
@@ -120,26 +124,36 @@ class ScoreBar(wx.Panel):
     def OnTimer(self):
         self.modified = False
 
-    def OnSlideBegin(self, evt):
+    def OnSlide(self, evt):
         self.modified = True
+        if self.sliding:
+            return
         self.sliding = True
-
-    def OnSlideEnd(self, evt):
         v = self.timeSpecifier.GetValue()
         now = self.BlueList.setFromSlider(v)
         self.RedList.setFromSlider(v)
         self.setPlayingTime(now)
+
+    def OnSlideBegin(self, evt):
+        pass
+
+    def OnSlideEnd(self, evt):
         self.sliding = False
+        # v = self.timeSpecifier.GetValue()
+        # now = self.BlueList.setFromSlider(v)
+        # self.RedList.setFromSlider(v)
+        # self.setPlayingTime(now)
+        # self.sliding = False
 
     def OnPaint(self, evt):
-        dc = wx.PaintDC(self)
-        dc.Clear()
-        # self.render(dc)
+        # dc = wx.PaintDC(self)
+        # dc.Clear()
+        self.render()
 
     # Private Functions
     def render(self):
-        self.RedList.setTechList(self.record[0][1])
-        self.BlueList.setTechList(self.record[1][1])
+        # self.RedList.setTechList(self.record[0][1])
+        # self.BlueList.setTechList(self.record[1][1])
         if not self.sliding:
             self.timeSpecifier.SetValue(self.getSliderValue())
 

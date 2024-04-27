@@ -1,7 +1,8 @@
 import cv2
 import wx
 import time
-from PublicFunctions import getNowMs
+from PublicFunctions import timeTag
+from TimeManager import TimeManager
 
 class StreamPlayer:
     """
@@ -15,6 +16,8 @@ class StreamPlayer:
         self.realTime = 0
         self.fps = fps
         self.frameLen = round(1000 / fps)
+        self.PlManager = TimeManager()
+        self.RTManager = TimeManager()
 
     def chooseStream(self, n: int):
         """
@@ -30,6 +33,7 @@ class StreamPlayer:
         :param past_ms: time (in ms) before real-time to be played from
         """
         self.timePlaying = self.realTime - past_ms
+        self.PlManager.SetTime(self.timePlaying)
 
     def getFrame(self):
         """
@@ -37,8 +41,10 @@ class StreamPlayer:
         It's called only when the player is playing
         :returns : the frame in current stream
         """
+        timeTag("StreamPlayer::getFrame")
         self.cameras[self.camera_no].set(cv2.CAP_PROP_POS_MSEC, self.timePlaying)
         ret, frame = self.cameras[self.camera_no].read()
+        timeTag("[return]")
         return frame
 
     def viewNextNFrame(self, n: int):
@@ -49,14 +55,14 @@ class StreamPlayer:
         :returns : n-th frame after frame at self.timePlaying
         """
         self.timePlaying += n * self.frameLen
-        self.cameras[self.camera_no].set(cv2.CAP_PROP_POS_FRAMES, n)
-        ret, frame = self.cameras[self.camera_no].read()
-        return frame
+        self.PlManager.SetTime(self.timePlaying)
+        return self.getFrame()
 
-    def OnWxTimer(self, playing: bool):
+    def OnWxTimer(self, playing: bool, streaming: bool):
         """
         things to do in every 1/fps seconds.
         """
-        self.realTime += self.frameLen
+        if streaming:
+            self.realTime = self.RTManager.GetPalyingTime()  # += self.frameLen
         if playing:
-            self.timePlaying += self.frameLen
+            self.timePlaying = self.PlManager.GetPalyingTime()  # += self.frameLen

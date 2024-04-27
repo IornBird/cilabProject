@@ -15,14 +15,14 @@ class TechBar(wx.Panel):
     """
     A timeline that shows a contestant's movements
     """
-    def __init__(self, parent):
+    def __init__(self, parent, techList: list):
         super().__init__(parent, style=wx.FULL_REPAINT_ON_RESIZE)
         self.isH = True
         self.beginTime = 0
         self.videoLength = 0
         self.timeInterval = DEFAULT_INTERVAL
         self.playingTime = 0
-        self.techList = []
+        self.techList = techList
 
         self.childrens = []
         self.Bind(wx.EVT_PAINT, self.OnPaint, self)
@@ -86,8 +86,9 @@ class TechBar(wx.Panel):
         gc = wx.GraphicsContext.Create(dc)
         gct = wx.GraphicsContext.Create(dc)
 
-        th = threading.Thread(target=self.threadRender, args=(gc, gct))
-        th.start()
+        # th = threading.Thread(target=self.threadRender, args=(gc, gct))
+        # th.start()
+        self.threadRender(gc, gct)
         # self.threadRender(gc, gct)
 
     # private functions
@@ -115,16 +116,16 @@ class TechBar(wx.Panel):
             if not self.inRange(c):
                 continue
             cornerX, width = self.timeTf(c.time)
-            wx.CallAfter(lambda: [
-                gc.DrawRectangle(cornerX, cornerY, width, height),
-                gct.DrawText(str(c.score), cornerX, 0)
-            ])
+            # wx.CallAfter(lambda: [
+            gc.DrawRectangle(cornerX, cornerY, width, height),
+            gct.DrawText(str(c.score), cornerX, 0)
+            # ])
 
         timeX = (self.playingTime - self.beginTime) * self.GetSize().x / self.timeInterval
-        wx.CallAfter(lambda: [
-            gc.SetBrush(wx.Brush(wx.Colour(63, 63, 63))),
-            gc.DrawRectangle(timeX, 0, 1, self.GetSize().y)
-        ])
+        # wx.CallAfter(lambda: [
+        gc.SetBrush(wx.Brush(wx.Colour(63, 63, 63))),
+        gc.DrawRectangle(timeX, 0, 1, self.GetSize().y)
+        # ])
 
 
     '''

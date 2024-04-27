@@ -7,6 +7,8 @@ from ViewerPanes.ScoreBar import ScoreBar
 from ViewerPanes.VideoPane import VideoPane
 from TechRecord import TechRecord, Tech
 
+from TimeManager import TimeManager
+
 import SQL.mysql_api as sql
 
 # demo
@@ -44,7 +46,7 @@ class JudgeViewer(wx.Panel):
         self.timer = wx.Timer(self)
 
         self.timePlaying = 0
-        self.gamePaused = False  # True iff timer of contest itself is paused
+        self.gamePaused = True  # True iff timer of contest itself is paused
         self.TechRecord = techRecord #(["", []], ["", []])  # format is ([blue name, blue record], [red name, red record])
         self.Scores = ([0, 0], [0, 0])  # formate is ([blue score, blue violates], [red score, red violates])
 
@@ -85,7 +87,8 @@ class JudgeViewer(wx.Panel):
         self.SetSizerAndFit(sizer)
 
         self.Bind(wx.EVT_TIMER, self.OnTimer)
-        self.Bind(wx.EVT_KEY_DOWN, self.OnKeyEvent)
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnKeyEvent)
+        self.SetFocus()
         self.Bind(wx.EVT_TIMER, self.OnTimer)
 
     # Interfaces
@@ -129,18 +132,30 @@ class JudgeViewer(wx.Panel):
         vidNow = self.videoPane.getPlayingTime()
         tLineNow = self.timeLine.getSetTime()
         if tLineNow != -1:
-            vidNow = tLineNow
-        self.timePlaying = vidNow
-        for c in (
-            (self.videoPane.setPlayingTime, self.timePlaying),
-            (self.timeLine.setPlayingTime, self.timePlaying),
-            (self.scoreSet.findTech, self.timePlaying)
-        ):
-            threading.Thread(target=c[0], args=(c[1],)).start()
+            self.timePlaying = tLineNow
+        else:
+            if vidNow >= 0:
+                self.timePlaying = vidNow
+            else:
+                vidNow = ~vidNow
+            self.timeLine.setPlayingTime(vidNow)
+        self.videoPane.setPlayingTime(tLineNow)
 
-        end = threading.Thread(target=wx.CallAfter, args=(self.Refresh,))
-        end.start()
-        end.join()
+        self.timeLine.setVideoLength(self.videoPane.getVideoLength())
+
+        # self.timePlaying = vidNow
+        self.scoreSet.findTech(self.timePlaying)
+        # self.Refresh()
+        # for c in (
+        #     (self.videoPane.setPlayingTime, self.timePlaying),
+        #     (self.timeLine.setPlayingTime, self.timePlaying),
+        #     (self.scoreSet.findTech, self.timePlaying)
+        # ):
+        #     threading.Thread(target=c[0], args=(c[1],)).start()
+        #
+        # end = threading.Thread(target=wx.CallAfter, args=(self.Refresh,))
+        # end.start()
+        # end.join()
 
         # # TODO: get data from core
 
@@ -154,6 +169,7 @@ class JudgeViewer(wx.Panel):
         code = evt.GetKeyCode()
         if code == 32:
             self.gamePaused = not self.gamePaused
+            self.videoPane.GameRun(self.gamePaused)
         elif code == 0:
             raise KeyError("Set keyboard to English(US)")
 

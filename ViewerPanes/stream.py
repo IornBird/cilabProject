@@ -3,6 +3,7 @@ import cv2
 
 from PublicFunctions import *
 from ViewerPanes.StreamPlayer import *
+from TimeManager import TimeManager
 
 import threading
 
@@ -22,7 +23,7 @@ class CapFrame(wx.Frame):
         self.timer = wx.Timer(self)
         self.timer.Start(1000./15)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_TIMER, self.NextFrame)
+        # self.Bind(wx.EVT_TIMER, self.NextFrame)
         self.Show()
         
     def OnPaint(self, evt):
@@ -45,6 +46,8 @@ class ShowCapture(wx.Panel):
         self.drawing = False
         self.period = round(1000 / fps)
         self.playing = False
+        self.streaming = False
+        self.modified = False
 
         self.player = StreamPlayer(captures, fps)
         self.timer = None  # wx.Timer()
@@ -63,12 +66,26 @@ class ShowCapture(wx.Panel):
         #     self.timer.Start(self.period)
 
     def Play(self):
+        timeTag("ShowCapture::Play")
         self.playing = True
+        self.player.PlManager.Start()
         # if not self.timer.IsRunning():
         #     self.timer.Start(self.period)
 
+    def GamePlay(self):
+        timeTag("ShowCapture::GamePlay")
+        self.streaming = True
+        self.player.RTManager.Start()
+
+    def GamePause(self):
+        timeTag("ShowCapture::GamePause")
+        self.streaming = False
+        self.player.RTManager.Pause()
+
     def Pause(self):
+        timeTag("ShowCapture::Pause")
         self.playing = False
+        self.player.PlManager.Pause()
         self.showFrame()
 
     def toRealTime(self, evt=None):
@@ -87,24 +104,27 @@ class ShowCapture(wx.Panel):
         return self.player.realTime
 
     def showFrame(self):
+        timeTag("ShowCapture::showFrame")
         frame = cv2.cvtColor(self.player.getFrame(), cv2.COLOR_BGR2RGB)
 
         self.bmp.CopyFromBuffer(frame)
         # self.Refresh()
 
     # Event catcher
-    def OnTimer(self, evt):
+    def OnWxTimer(self, modified):
         """
         runs only if this is playing
         """
-        self.player.OnWxTimer(self.playing)
-        if not self.playing or self.drawing:
-            return
-        self.showFrame()
+        self.player.OnWxTimer(self.playing, self.streaming)
+        if (self.playing or modified) and not self.drawing:
+            self.showFrame()
+            self.Refresh()
         # TODO: store last 10 sec video
 
     def OnPaint(self, evt):
         if self.bmp is None:
+            return
+        if self.drawing:
             return
         self.drawing = True
 

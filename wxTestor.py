@@ -2,18 +2,25 @@
 import wx
 from PublicFunctions import *
 
+import wx.media
 
 class theFrame(wx.Frame):
     def __init__(self, title: str, size):
         super().__init__(parent=None, id=wx.ID_ANY, title=title, size=size)
 
         sizer = wx.BoxSizer()
-        self.panel = APane(self)
+        self.panel = wx.media.MediaCtrl(self)
 
         sizer.Add(self.panel, 1, wx.EXPAND)
         self.SetSizerAndFit(sizer)
 
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+
+        self.panel.Load(0)
+        self.panel.SetPlaybackRate(1)
+        self.panel.SetVolume(1)
+        self.panel.ShowPlayerControls()
+
         self.SetFocus()
 
     def OnKey(self, evt):

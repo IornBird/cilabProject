@@ -2,7 +2,15 @@ import wx
 import time
 
 def getNowMs():
-    return time.time_ns() // 10 ** 6
+    return time.time_ns() // (10 ** 6)
+
+
+_prev = getNowMs()
+def timeTag(funcName: str):
+    global _prev
+    _now = getNowMs()
+    print(funcName, "is called after", _now - _prev, "ms")
+    _prev = _now
 
 
 def detectFont(size: list[float], panel: wx.Window, string: str, ratio=0.9):
@@ -62,7 +70,7 @@ def toInts(nums: list[float]):
 
 
 def toTimeFormat(now):
-    T = [now // 60000, now // 10]
+    T = [now // 60000, (now % 60000) // 10]
     s = str(T[0])
     s2 = str(T[1] / 100)
     if T[1] < 1000:

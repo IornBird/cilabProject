@@ -36,8 +36,9 @@ class VideoPane(wx.Panel):
         self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
 
         self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
-        self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
-        self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
+        self.Bind(wx.EVT_SLIDER, self.OnSlide, self.timeSlider)
+        # self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlide, self.timeSlider)
+        # self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSlider)
 
     def Destroy(self):
         self.stream.Pause()
@@ -129,6 +130,7 @@ class VideoPane(wx.Panel):
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
         self.cameraNo = 1
+        self.modified = False
         # self.passLoad = passTo
 
     # Interfaces
@@ -144,16 +146,24 @@ class VideoPane(wx.Panel):
 
     def getPlayingTime(self):
         """
-        :return: time video playing, in milliseconds
+        :return: time video playing, in milliseconds.
+            if time isn't modified by slider, returns reversed of that.
         """
-        return self.stream.getPlayingTime()  # Tell()
+        ans = self.stream.getPlayingTime()  # Tell()
+        if self.modified:
+            return ans
+        return ~ans
 
     def setPlayingTime(self, time: int):
         """
         :param time: time set to play from
         """
-        wx.CallAfter(self.stream.setTime, time)  # Seek(time)
-        wx.CallAfter(self.onTimer)
+        self.modified = (time >= 0)
+        if self.modified:
+            self.stream.setTime(time)
+        self.onTimer()
+        # wx.CallAfter(self.stream.setTime, time)  # Seek(time)
+        # wx.CallAfter(self.onTimer)
 
     def getVideoLength(self):
         """
@@ -161,8 +171,15 @@ class VideoPane(wx.Panel):
         """
         return self.stream.getTotalLength()  # Length()
 
+    def GameRun(self, pause: bool):
+        if pause:
+            self.stream.GamePause()
+        else:
+            self.stream.GamePlay()
+
     # Event Catcher
     def OnPlay(self, event):
+        timeTag("VideoPane::OnPlay")
         self.playing = self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
         self.timeSlider.SetMax(self.getVideoLength())
         if self.playing:
@@ -181,11 +198,18 @@ class VideoPane(wx.Panel):
 
         # self.stream.Load(self.videos[self.cameraNo])
         self.stream.switchStream(self.cameraNo - 1)
-        if not self.playing:
+        if self.playing:
             self.stream.Play()
         # self.passLoad()  # <-HERE
 
     def OnSlideEnd(self, evt):
+        pass
+
+    def OnSlide(self, evt):
+        self.modified = True
+        if self.isSliding:
+            return
+        self.isSliding = True
         position = self.timeSlider.GetValue()
         # self.stream.Seek(position)
         self.setPlayingTime(position)
@@ -193,16 +217,16 @@ class VideoPane(wx.Panel):
         self.stream.showFrame()
         self.isSliding = False
 
-    def OnSlide(self, evt):
-        self.isSliding = True
-
     def onTimer(self):
         if not self.isSliding:
-            self.stream.OnTimer(None)
+            self.stream.OnWxTimer(self.modified)
             now = self.getPlayingTime()
             length = self.getVideoLength()
+            if now < 0: now = ~now
             self.timeLabel.SetLabelText(getTimeFormate(now, length))
+            self.timeSlider.SetMax(length)
             self.timeSlider.SetValue(now)
+        self.modified = False
 
 
 # m: ss.ss

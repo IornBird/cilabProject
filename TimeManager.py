@@ -8,22 +8,25 @@ class TimeManager:
     def __init__(self):
         self.begin = now_ms()
         self.pause = now_ms()
+        self.length = 0
         self.running = False
 
     def Start(self):
         """
         (re)start playing
         """
-        pauseLen = now_ms() - self.pause
-        self.begin -= pauseLen
-        self.running = True
+        if not self.running:
+            pauseLen = now_ms() - self.pause
+            self.begin += pauseLen
+            self.running = True
 
     def Pause(self):
         """
         pause
         """
-        self.pause = now_ms()
-        self.running = False
+        if self.running:
+            self.pause = now_ms()
+            self.running = False
 
     def GetPalyingTime(self):
         """
@@ -44,3 +47,6 @@ class TimeManager:
         :param dt: time you want to add on TimeManger
         """
         self.begin -= dt
+
+    def SetLength(self, t: int):
+        pass
