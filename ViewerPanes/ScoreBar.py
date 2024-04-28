@@ -4,7 +4,7 @@ from ViewerPanes.TechBar import TechBar
 from TechRecord import TechRecord
 
 class ScoreBar(wx.Panel):
-    def __init__(self, parent, record):
+    def __init__(self, parent, record, scores):
         super().__init__(parent)
 
         self.scroll = None         # top    of all | wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
@@ -24,7 +24,7 @@ class ScoreBar(wx.Panel):
 
         Lst = [(c // 2 + 1, c % 2) for c in range(4)]
         SclPlc = [(3, 0), (1, 2)]
-        self.CreateControls(Lst, SclPlc)
+        self.CreateControls(Lst, SclPlc, scores)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint, self)
         self.Bind(wx.EVT_SCROLL, self.OnScroll, self.scroll)
@@ -34,15 +34,17 @@ class ScoreBar(wx.Panel):
         # self.Bind(wx.EVT_SCROLL_THUMBTRACK, self.OnSlideBegin, self.timeSpecifier)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE, self.OnSlideEnd, self.timeSpecifier)
 
-    def CreateControls(self, Lst, SclPlc):
+    def CreateControls(self, Lst, SclPlc, scores):
         self.sizer = wx.GridBagSizer(1, 1)
         if True:
-            self.BlueScore = ScorePane(self, True)
+            self.BlueScore = ScorePane(self, True, scores[0])
             self.BlueScore.setName(self.record[0][0])
             self.BlueList = TechBar(self, self.record[0][1])
-            self.RedScore = ScorePane(self, False)
+
+            self.RedScore = ScorePane(self, False, scores[1])
             self.RedScore.setName(self.record[1][0])
             self.RedList = TechBar(self, self.record[1][1])
+
             self.scroll = wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
 
         self.timeSpecifier = wx.Slider(self)
@@ -122,8 +124,8 @@ class ScoreBar(wx.Panel):
     # Event Catchers
     def OnScroll(self, evt):
         val = self.scroll.GetThumbPosition()
-        self.RedList.setTimeRange(val)
-        self.BlueList.setTimeRange(val)
+        self.RedList.setTimeAndRange(val)
+        self.BlueList.setTimeAndRange(val)
 
         self.Refresh()
         # self.modified = True

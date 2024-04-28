@@ -3,27 +3,37 @@ from PublicFunctions import *
 
 
 class TechRecord:
-    def __init__(self, timeSet: int, tech, toward, score=-2):
+    def __init__(self, timeSet: int, tech, toward):
         self.time = timeSet
         self.tech = 0
         self.toward = 0
-        self.score = score
-        if score < 0:
-            self.setValue(tech, toward)
+        self.score = 0
+        self.setValue(tech, toward)
         self.invalid = False
 
-    def render_derd(self, head: wx.Size, scale: wx.Size, gc: wx.GraphicsContext):
-        gc.DrawRectangle(head[0], head[1], scale[0], scale[1])
-        # putPartString(scale, gc, str(self.score))
-
     def setValue(self, tech, toward):
+        """
+        :return: change of [score, violate], used for total score change
+        """
         if isinstance(tech, str):
             tech = Tech.FindTech[tech]
         if isinstance(toward, str):
             toward = Tech.FindToward[toward]
+        dViolate = (tech == Tech.VIOLATE) - (self.tech == Tech.VIOLATE)
         self.tech = tech
         self.toward = toward
+        dScore = self.score
         self.score = findScore(tech, toward)
+        return [self.score - dScore, dViolate]
+
+    def reverseInvalid(self):
+        """
+        :return: change of [score, violate], used for total score change
+            if score is negative, self is now invalid
+        """
+        self.invalid = not self.invalid
+        neg = -1 if self.invalid else 1
+        return [neg * self.score, neg * (self.tech == Tech.VIOLATE)]
 
     def __gt__(self, other):
         return self.time > other.time
@@ -60,6 +70,7 @@ class Tech:
         TRUNK: 0,
         HEAD: 1
     }
+
 
 class TechList:
     def __int__(self):

@@ -29,7 +29,7 @@ class TechBar(wx.Panel):
 
 
     # Interfaces
-    def setTimeRange(self, begin: int, interval=DEFAULT_INTERVAL):
+    def setTimeAndRange(self, begin: int, interval=DEFAULT_INTERVAL):
         """
         :param begin:    the earliest time stamp where blocks can be shown
         :param interval: the time interval where blocks can be shown
@@ -116,8 +116,12 @@ class TechBar(wx.Panel):
             if not self.inRange(c):
                 continue
             cornerX, width = self.timeTf(c.time)
+            gc.SetBrush(wx.Brush(
+                wx.Colour(225, 225, 225) if c.invalid
+                else wx.Colour(127, 127, 255)
+            ))
             # wx.CallAfter(lambda: [
-            gc.DrawRectangle(cornerX, cornerY, width, height),
+            gc.DrawRectangle(cornerX, cornerY, width, height)
             gct.DrawText(str(c.score), cornerX, 0)
             # ])
 

@@ -4,7 +4,6 @@ import time
 def getNowMs():
     return time.time_ns() // (10 ** 6)
 
-
 _prev = getNowMs()
 def timeTag(funcName: str):
     global _prev

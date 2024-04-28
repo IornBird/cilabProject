@@ -6,12 +6,11 @@ class ScorePane(wx.Panel):
     """
     A panel that shows score and times of violating rules of a contestant
     """
-    def __init__(self, parent, isBlue):
+    def __init__(self, parent, isBlue, scores):
         super().__init__(parent)
         self.SetFont(wx.Font(36, wx.FONTFAMILY_ROMAN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.color = wx.BLUE if isBlue else wx.RED
-        self.score = 0
-        self.violate = 0
+        self.scores = scores
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.numberBoard = wx.Panel(self, style=wx.FULL_REPAINT_ON_RESIZE)
         if True:
@@ -44,8 +43,8 @@ class ScorePane(wx.Panel):
         :param score: score this constant got recently
         :param violate: times this contestant violates rule
         """
-        self.score = score
-        self.violate = violate
+        self.scores[0] = score
+        self.scores[1] = violate
 
     # Private Functions
     def setTextSize(self):
@@ -68,16 +67,16 @@ class ScorePane(wx.Panel):
             gc.SetBrush(wx.Brush(wx.WHITE))
             gc.DrawRectangle(*secConer, secSize, secSize)
 
-            s = str(self.score)
+            s = str(self.scores[0])
             cornerN = detectFont([SquSize, SquSize], self.numberBoard, s)
             cornerN = (cornerN[0] + corner[0], cornerN[1] + corner[1])
             gc.SetFont(self.numberBoard.GetFont(), wx.WHITE)
-            gc.DrawText(str(self.score), *toInts(cornerN))
+            gc.DrawText(s, *toInts(cornerN))
 
-            s = str(self.violate)
+            s = str(self.scores[1])
             cornerN = detectFont([secSize, secSize], self.numberBoard, s)
             cornerN = (cornerN[0] + secConer[0], cornerN[1] + secConer[1])
             gc.SetFont(self.numberBoard.GetFont(), wx.BLACK)
-            gc.DrawText(str(self.score), *toInts(cornerN))
+            gc.DrawText(s, *toInts(cornerN))
 
         gc.Destroy()

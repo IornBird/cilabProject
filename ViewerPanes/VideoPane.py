@@ -8,7 +8,7 @@ from ViewerPanes.stream import *
 GUI_OBJ = None
 
 class VideoPane(wx.Panel):
-    def __init__(self, parent, streams: list[str], passTo):
+    def __init__(self, parent, streams: list[str], fps=60):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
         self.setPrivateMembers()
@@ -27,7 +27,7 @@ class VideoPane(wx.Panel):
         self.timeSlider = GUI_OBJ        # center       | wx.Slider
         self.cameraNum = GUI_OBJ         # wx.SpinCtrl(...)
 
-        self.CreateControls(streams)
+        self.CreateControls(streams, fps)
 
         # Connect Events
         self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
@@ -44,11 +44,11 @@ class VideoPane(wx.Panel):
         self.stream.Pause()
         super().Destroy()
 
-    def CreateControls(self, streams):
+    def CreateControls(self, streams, fps):
         vidoeSizer = wx.BoxSizer(wx.VERTICAL)
 
         # stream
-        self.stream = ShowCapture(self, streams)
+        self.stream = ShowCapture(self, streams, fps)
         # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
         # self.stream.Load(self.videos[1])
         # self.stream.SetPlaybackRate(1)
@@ -141,6 +141,7 @@ class VideoPane(wx.Panel):
         """
         self.videos = [None]
         self.videos.extend(videos)
+
         self.cameraNum.SetMax(len(self.videos))
         self.OnChangeCma(None)
 
@@ -218,14 +219,14 @@ class VideoPane(wx.Panel):
         self.isSliding = False
 
     def onTimer(self):
-        if not self.isSliding:
-            self.stream.OnWxTimer(self.modified)
-            now = self.getPlayingTime()
-            length = self.getVideoLength()
-            if now < 0: now = ~now
-            self.timeLabel.SetLabelText(getTimeFormate(now, length))
-            self.timeSlider.SetMax(length)
-            self.timeSlider.SetValue(now)
+        # if not self.isSliding:
+        self.stream.OnWxTimer(self.modified)
+        now = self.getPlayingTime()
+        length = self.getVideoLength()
+        if now < 0: now = ~now
+        self.timeLabel.SetLabelText(getTimeFormate(now, length))
+        self.timeSlider.SetMax(length)
+        self.timeSlider.SetValue(now)
         self.modified = False
 
 

@@ -3,7 +3,7 @@ from TechRecord import *
 
 
 class ScoreSetPane(wx.Panel):
-    def __init__(self, parent, techRecord):
+    def __init__(self, parent, techRecord, scores):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
 
@@ -13,10 +13,10 @@ class ScoreSetPane(wx.Panel):
         self.TimeLabel.Wrap(-1)
         bSizer1.Add(self.TimeLabel, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.blueScore = ScoreSet(self, techRecord[0][1], True)
+        self.blueScore = ScoreSet(self, techRecord[0][1], scores[0], True)
         bSizer1.Add(self.blueScore, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.redScore = ScoreSet(self, techRecord[1][1], False)
+        self.redScore = ScoreSet(self, techRecord[1][1], scores[1], False)
         bSizer1.Add(self.redScore, 1, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizerAndFit(bSizer1)
@@ -24,7 +24,10 @@ class ScoreSetPane(wx.Panel):
 
         # datas
         self.techList = techRecord  # pointer of tech-record on JudgeViewer
+        self.scores = scores
         self.time = 0
+
+        self.initScore(self.scores, self.techList)
 
     # Interfaces
     def setTime(self, time: int, modify=False):
@@ -39,6 +42,11 @@ class ScoreSetPane(wx.Panel):
         """
         self.techList = record
 
+    def updateScores(self, diff, isBlue):
+        self.scores[not isBlue][0] += diff[0] + diff[1]
+        self.scores[isBlue][0] += diff[1]
+        self.scores[not isBlue][1] += diff[1]
+
     def findTech(self, time: int):
         """
         find tech used on both side at time
@@ -52,9 +60,23 @@ class ScoreSetPane(wx.Panel):
             e.g. if (0, 1) passed, that means record[0][0] and record[0][1] will be used
         """
 
+    # Private Functions
+    def initScore(self, scores: tuple[int, int], techList):
+        """
+        :param scores: ([score, violate], [score, violate])
+        :param techList: ([name, tech], [name, tech])
+        """
+        for i in range(2):
+            for c in techList[i][1]:
+                s = c.score
+                if s < 0:
+                    scores[1 - i][0] += 1
+                    scores[i][1] += 1
+                else:
+                    scores[i][0] += s
 
 class ScoreSet(wx.Panel):
-    def __init__(self, parent, techList, isBlue):
+    def __init__(self, parent, techList, scores, isBlue):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(619, 148),
                           style=wx.TAB_TRAVERSAL)
 
@@ -102,6 +124,7 @@ class ScoreSet(wx.Panel):
 
         # data structure
         self.techList = techList
+        self.isBlue = isBlue
         # Connect Events
         self.setValid.Bind(wx.EVT_BUTTON, self.OnValidSet)
         self.sendConfirm.Bind(wx.EVT_BUTTON, self.OnConfirm)
@@ -121,16 +144,27 @@ class ScoreSet(wx.Panel):
         index = self.FindTech(time)
         if index != -1:
             c = self.techList[index]
-            c.setValue(self.techSelect.GetValue(), self.towardSelect.GetValue())
+            diff = c.setValue(self.techSelect.GetValue(), self.towardSelect.GetValue())
+            self.GetParent().updateScores(diff, self.isBlue)
         else:
             self.techList.append(TechRecord(time, self.techSelect.GetValue(), self.towardSelect.GetValue()))
+            new = self.techList[-1]
+            assert isinstance(new, TechRecord)
+            diff = [new.score, (new.score < 0)]
+            self.GetParent().updateScores(diff, self.isBlue)
 
     def updateInterface(self, time: int):
         self.setInterface(self.FindTech(time))
 
-    # Virtual event handlers, override them in your derived class
+    # Event catcher
     def OnValidSet(self, event):
-        self.setValid.SetBitmap(wx.Bitmap(u"Images/isInvalid.png", wx.BITMAP_TYPE_ANY))
+        index = self.FindTech(self.GetParent().time)
+        diff = self.techList[index].reverseInvalid()
+        self.setValid.SetBitmap(wx.Bitmap(u"Images/isInvalid.png" if diff[0] < 0
+                                          else u"Images/notInvalid.png",
+                                          wx.BITMAP_TYPE_ANY))
+        self.GetParent().updateScores(diff, self.isBlue)
+
 
     def OnConfirm(self, evt):
         self.updateRecord(self.GetParent().time)
@@ -139,7 +173,7 @@ class ScoreSet(wx.Panel):
     def setInterface(self, index):
         if index == -1:
             self.techSelect.SetValue(u"Choose Tech")
-            self.techSelect.SetValue(u"Choose toward")
+            self.towardSelect.SetValue(u"Choose toward")
         else:
             c = self.techList[index]
             self.techSelect.SetSelection(Tech.FindTechRev[c.tech])

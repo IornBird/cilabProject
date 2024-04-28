@@ -35,7 +35,7 @@ class ShowCapture(wx.Panel):
     def __init__(self, parent, streams: list[str], fps=60):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
-        #captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
+        # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
         # captures = [cv2.VideoCapture(1)]
         for c in captures:
@@ -143,13 +143,13 @@ class ShowCapture(wx.Panel):
         if not self.playing:
             frame = cv2.cvtColor(self.player.viewNextNFrame(1), cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
-            # self.Refresh()
+            self.Refresh()
 
     def OnPreviousFrame(self, evt):
         if not self.playing:
             frame = cv2.cvtColor(self.player.viewNextNFrame(-1), cv2.COLOR_BGR2RGB)
             self.bmp.CopyFromBuffer(frame)
-            # self.Refresh()
+            self.Refresh()
 
     # Private functions
     def SetBitmap(self):
