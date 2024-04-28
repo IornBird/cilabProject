@@ -16,8 +16,8 @@ IPs = ['192.168.100.127', '192.168.100.108']
 playbacks = []
 
 techRecord = (
-            ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK, 2), TechRecord(2000, Tech.PUNCH, Tech.HEAD, 0)]],
-            ["Laura", [TechRecord(500, Tech.T_KICK, Tech.HEAD, 3)]]
+            ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK), TechRecord(2000, Tech.PUNCH, Tech.HEAD)]],
+            ["Laura", [TechRecord(500, Tech.T_KICK, Tech.HEAD)]]
         )
 
 """
@@ -38,7 +38,6 @@ class MyEvent(wx.PyCommandEvent):
 """
 
 FPS = 60
-now = time.time()
 
 class JudgeViewer(wx.Panel):
     def __init__(self, parent):
@@ -76,7 +75,7 @@ class JudgeViewer(wx.Panel):
         if True:  # set detail for hrSpliter
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
-                self.scoreSet = ScoreSetPane(vtSpliter, None, None)
+                self.scoreSet = ScoreSetPane(vtSpliter, self.TechRecord)
                 self.videoPane = VideoPane(vtSpliter, IPs, self.needReload)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.scoreSet, self.videoPane)
@@ -125,26 +124,25 @@ class JudgeViewer(wx.Panel):
             return
         self.timerProcessing = True
 
-        # global now
-        # now = time.time() - now
-        # print(now, "second passed since last call")
-
-        vidNow = self.videoPane.getPlayingTime()
+        vidNow = self.videoPane.getPlayingTime()  # less than 0 means it's not modified
         tLineNow = self.timeLine.getSetTime()
+        modifySS = False
         if tLineNow != -1:
             self.timePlaying = tLineNow
+            modifySS = True
         else:
-            if vidNow >= 0:
-                self.timePlaying = vidNow
-            else:
+            if vidNow < 0:
                 vidNow = ~vidNow
-            self.timeLine.setPlayingTime(vidNow)
+            else:
+                modifySS = True
+            self.timePlaying = vidNow
         self.videoPane.setPlayingTime(tLineNow)
+        self.timeLine.OnTimer(self.timePlaying)
 
         self.timeLine.setVideoLength(self.videoPane.getVideoLength())
 
         # self.timePlaying = vidNow
-        self.scoreSet.findTech(self.timePlaying)
+        self.scoreSet.setTime(self.timePlaying, modifySS)
         # self.Refresh()
         # for c in (
         #     (self.videoPane.setPlayingTime, self.timePlaying),

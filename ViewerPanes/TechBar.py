@@ -8,7 +8,7 @@ from TechRecord import *
 
 # const
 DEFAULT_INTERVAL = 5000  # 5sec
-DEFAULT_SHOW = 1000 # 1sec
+DEFAULT_SHOW = 1000  # 1sec
 
 
 class TechBar(wx.Panel):

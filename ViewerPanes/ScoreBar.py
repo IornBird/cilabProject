@@ -38,8 +38,10 @@ class ScoreBar(wx.Panel):
         self.sizer = wx.GridBagSizer(1, 1)
         if True:
             self.BlueScore = ScorePane(self, True)
+            self.BlueScore.setName(self.record[0][0])
             self.BlueList = TechBar(self, self.record[0][1])
             self.RedScore = ScorePane(self, False)
+            self.RedScore.setName(self.record[1][0])
             self.RedList = TechBar(self, self.record[1][1])
             self.scroll = wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
 
@@ -79,8 +81,6 @@ class ScoreBar(wx.Panel):
         if self.playingTime != time:
             self.playingTime = time
             self.Refresh()
-            self.modified = False
-
 
     def getSetTime(self):
         """
@@ -91,18 +91,18 @@ class ScoreBar(wx.Panel):
         return -1
 
 
-    def setVideoLength(self, time: int):
+    def setVideoLength(self, vidLen: int):
         """
-        :param time: length of video in milliseconds
+        :param vidLen: length of video in milliseconds
         """
-        self.videoLength = time
+        self.videoLength = vidLen
+        showRange = self.BlueList.timeInterval
         self.scroll.SetScrollbar(
             self.scroll.GetThumbPosition(),
-            self.scroll.GetThumbSize(),
-            time,
+            showRange,
+            vidLen,
             self.scroll.GetPageSize()
         )
-        showRange = self.BlueList.timeInterval
         self.timeSpecifier.SetRange(0, showRange)
         self.render()
 
@@ -112,19 +112,31 @@ class ScoreBar(wx.Panel):
         :return : [tech on blue, tech on red], None if not found
         """
 
+    def setScore(self, scores):
+        """
+        :param scores: score and violation of both constant
+        """
+        self.BlueScore.setScore(*(scores[0]))
+        self.RedScore.setScore(*(scores[1]))
+
     # Event Catchers
     def OnScroll(self, evt):
         val = self.scroll.GetThumbPosition()
         self.RedList.setTimeRange(val)
         self.BlueList.setTimeRange(val)
 
-        self.modified = True
         self.Refresh()
+        # self.modified = True
 
-    def OnTimer(self):
-        self.modified = False
+
+    def OnTimer(self, time: int):
+        self.setPlayingTime(time)
+        self.modified = self.sliding
 
     def OnSlide(self, evt):
+        # if self.sliding is None:
+        #     self.sliding = False
+        #     return
         self.modified = True
         if self.sliding:
             return
@@ -133,12 +145,13 @@ class ScoreBar(wx.Panel):
         now = self.BlueList.setFromSlider(v)
         self.RedList.setFromSlider(v)
         self.setPlayingTime(now)
+        self.sliding = False
 
     def OnSlideBegin(self, evt):
         pass
 
     def OnSlideEnd(self, evt):
-        self.sliding = False
+        pass
         # v = self.timeSpecifier.GetValue()
         # now = self.BlueList.setFromSlider(v)
         # self.RedList.setFromSlider(v)

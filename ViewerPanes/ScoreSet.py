@@ -1,32 +1,37 @@
 import wx
 from TechRecord import *
 
+
 class ScoreSetPane(wx.Panel):
-    def __init__(self, parent, blueTech, redTech):
+    def __init__(self, parent, techRecord):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
 
         bSizer1 = wx.BoxSizer(wx.VERTICAL)
 
-        self.TimeLabel = wx.StaticText(self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, 0)
+        self.TimeLabel = wx.StaticText(self, wx.ID_ANY, u"Score Set", wx.DefaultPosition, wx.DefaultSize, 0)
         self.TimeLabel.Wrap(-1)
         bSizer1.Add(self.TimeLabel, 0, wx.ALL | wx.EXPAND, 5)
 
-        self.blueScore = ScoreSet(self, blueTech)
+        self.blueScore = ScoreSet(self, techRecord[0][1], True)
         bSizer1.Add(self.blueScore, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.redScore = ScoreSet(self, redTech)
+        self.redScore = ScoreSet(self, techRecord[1][1], False)
         bSizer1.Add(self.redScore, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.SetSizer(bSizer1)
+        self.SetSizerAndFit(bSizer1)
         self.Layout()
 
-        # data structures
-        self.techList = None  # pointer of tech-record on JudgeViewer
+        # datas
+        self.techList = techRecord  # pointer of tech-record on JudgeViewer
+        self.time = 0
 
     # Interfaces
-    def SetTimer(time: int):
-        pass
+    def setTime(self, time: int, modify=False):
+        self.time = time
+        if modify:
+            self.blueScore.updateInterface(time)
+            self.redScore.updateInterface(time)
 
     def setTechRecoed(self, record: tuple):
         """
@@ -38,7 +43,7 @@ class ScoreSetPane(wx.Panel):
         """
         find tech used on both side at time
         :param time: time since round begins, in ms
-        :return: [tech of blue, tech of red]. Any of them be None if not found
+        :return: indexes of [tech of blue, tech of red]. Any of them be None if not found
         """
 
     def setTech(self, redTech, blueTech):
@@ -49,15 +54,16 @@ class ScoreSetPane(wx.Panel):
 
 
 class ScoreSet(wx.Panel):
-    def __init__(self, parent, techList):
+    def __init__(self, parent, techList, isBlue):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(619, 148),
                           style=wx.TAB_TRAVERSAL)
 
         gbSizer1 = wx.GridBagSizer(0, 0)
         gbSizer1.SetFlexibleDirection(wx.BOTH)
-        gbSizer1.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
+        # gbSizer1.SetNonFlexibleGrowMode(wx.FLEX_GROWMODE_SPECIFIED)
 
         self.nameTag = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
+        self.nameTag.SetBackgroundColour(wx.BLUE if isBlue else wx.RED)
         gbSizer1.Add(self.nameTag, wx.GBPosition(0, 0), wx.GBSpan(1, 2), wx.ALL | wx.EXPAND, 5)
 
         self.techLabel = wx.StaticText(self, wx.ID_ANY, u"Tech", wx.DefaultPosition, wx.DefaultSize, 0)
@@ -68,7 +74,7 @@ class ScoreSet(wx.Panel):
         self.towardLabel.Wrap(-1)
         gbSizer1.Add(self.towardLabel, wx.GBPosition(2, 0), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
-        techSelectChoices = [u"Punch", u"Kick", u"T. Kick"]
+        techSelectChoices = [u"Punch", u"Kick", u"T. Kick", u"Gam-jeom"]
         self.techSelect = wx.ComboBox(self, wx.ID_ANY, u"Choose Tech", wx.DefaultPosition, wx.DefaultSize,
                                       techSelectChoices, 0)
         gbSizer1.Add(self.techSelect, wx.GBPosition(1, 1), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
@@ -82,18 +88,60 @@ class ScoreSet(wx.Panel):
                                         wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW)
         gbSizer1.Add(self.setValid, wx.GBPosition(1, 2), wx.GBSpan(2, 1), wx.ALL | wx.EXPAND, 5)
 
+        self.sendConfirm = wx.BitmapButton(self, wx.ID_ANY, wx.Bitmap(u"Images/confirm.png", wx.BITMAP_TYPE_ANY),
+                                           wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW)
+        gbSizer1.Add(self.sendConfirm, wx.GBPosition(1, 3), wx.GBSpan(2, 1), wx.ALL | wx.EXPAND, 5)
+
         gbSizer1.AddGrowableCol(1)
-        gbSizer1.AddGrowableRow(0)
-        gbSizer1.AddGrowableRow(1)
-        gbSizer1.AddGrowableRow(2)
+        # gbSizer1.AddGrowableRow(0)
+        gbSizer1.AddGrowableRow(1, 1)
+        gbSizer1.AddGrowableRow(2, 1)
 
         self.SetSizer(gbSizer1)
         self.Layout()
 
+        # data structure
+        self.techList = techList
         # Connect Events
         self.setValid.Bind(wx.EVT_BUTTON, self.OnValidSet)
+        self.sendConfirm.Bind(wx.EVT_BUTTON, self.OnConfirm)
 
+    # Interfaces
+    def FindTech(self, time: int):
+        """
+        :param time: time since contest begin in ms
+        :return: index of tech used at time, -1 if not found
+        """
+        for i, c in enumerate(self.techList):
+            if c.time <= time <= c.time + 1000:
+                return i
+        return -1
 
-    # Virtual event handlers, overide them in your derived class
+    def updateRecord(self, time: int):
+        index = self.FindTech(time)
+        if index != -1:
+            c = self.techList[index]
+            c.setValue(self.techSelect.GetValue(), self.towardSelect.GetValue())
+        else:
+            self.techList.append(TechRecord(time, self.techSelect.GetValue(), self.towardSelect.GetValue()))
+
+    def updateInterface(self, time: int):
+        self.setInterface(self.FindTech(time))
+
+    # Virtual event handlers, override them in your derived class
     def OnValidSet(self, event):
-        self.setValid.SetBitmap(wx.Bitmap(u"Images/notInvalid.png", wx.BITMAP_TYPE_ANY))
+        self.setValid.SetBitmap(wx.Bitmap(u"Images/isInvalid.png", wx.BITMAP_TYPE_ANY))
+
+    def OnConfirm(self, evt):
+        self.updateRecord(self.GetParent().time)
+
+    # Private Functions
+    def setInterface(self, index):
+        if index == -1:
+            self.techSelect.SetValue(u"Choose Tech")
+            self.techSelect.SetValue(u"Choose toward")
+        else:
+            c = self.techList[index]
+            self.techSelect.SetSelection(Tech.FindTechRev[c.tech])
+            self.towardSelect.SetSelection(Tech.FindTowardRev[c.toward])
+
