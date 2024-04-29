@@ -13,7 +13,11 @@ import SQL.mysql_api as sql
 
 # demo
 IPs = ['192.168.100.127', '192.168.100.108']
-playbacks = []
+playbacks = [
+            "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
+            # "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
+            'C:\\Users\\User\\Desktop\\source\\source3\\Source6\\test.mp4'
+        ]
 
 techRecord = (
             ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK), TechRecord(2000, Tech.PUNCH, Tech.HEAD)]],
@@ -77,7 +81,7 @@ class JudgeViewer(wx.Panel):
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
                 self.scoreSet = ScoreSetPane(vtSpliter, self.TechRecord, self.Scores)
-                self.videoPane = VideoPane(vtSpliter, IPs, FPS)
+                self.videoPane = VideoPane(vtSpliter, playbacks, FPS)  # IPs
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.scoreSet, self.videoPane)
             self.timeLine = ScoreBar(hrSpliter, self.TechRecord, self.Scores)

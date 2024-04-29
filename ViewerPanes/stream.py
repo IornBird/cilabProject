@@ -36,7 +36,8 @@ class ShowCapture(wx.Panel):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
-        captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+        # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+        captures = [cv2.VideoCapture(c) for c in streams]
         # captures = [cv2.VideoCapture(1)]
         for c in captures:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)

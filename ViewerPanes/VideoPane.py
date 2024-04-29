@@ -181,12 +181,12 @@ class VideoPane(wx.Panel):
     # Event Catcher
     def OnPlay(self, event):
         timeTag("VideoPane::OnPlay")
-        self.playing = self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
+        self.playing = not self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
         self.timeSlider.SetMax(self.getVideoLength())
         if self.playing:
-            self.stream.Pause()
-        else:
             self.stream.Play()
+        else:
+            self.stream.Pause()
 
     def OnChangeCma(self, event):
         self.stream.Pause()
@@ -201,6 +201,7 @@ class VideoPane(wx.Panel):
         self.stream.switchStream(self.cameraNo - 1)
         if self.playing:
             self.stream.Play()
+        self.stream.OnWxTimer(True)
         # self.passLoad()  # <-HERE
 
     def OnSlideEnd(self, evt):
