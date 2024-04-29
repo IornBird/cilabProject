@@ -87,7 +87,7 @@ class JudgeViewer(wx.Panel):
         self.SetSizerAndFit(sizer)
 
         self.Bind(wx.EVT_TIMER, self.OnTimer)
-        self.Bind(wx.EVT_CHAR_HOOK, self.OnKeyEvent)
+        # self.Bind(wx.EVT_CHAR_HOOK, self.OnKeyEvent)
         self.SetFocus()
         self.Bind(wx.EVT_TIMER, self.OnTimer)
 
@@ -164,13 +164,28 @@ class JudgeViewer(wx.Panel):
         self.timerProcessing = False
 
     def OnKeyEvent(self, evt):
-        assert isinstance(evt, wx.KeyEvent)
-        code = evt.GetKeyCode()
-        if code == 32:
-            self.gamePaused = not self.gamePaused
-            self.videoPane.GameRun(self.gamePaused)
-        elif code == 0:
-            raise KeyError("Set keyboard to English(US)")
+        # assert isinstance(evt, wx.KeyEvent)
+        # code = evt.GetKeyCode()
+        # if code == 32:
+        self.gamePaused = not self.gamePaused
+        self.videoPane.GameRun(self.gamePaused)
+        # elif code == 0:
+        #     raise KeyError("Set keyboard to English(US)")
+        # else:
+        #     evt.Skip()
+
+    def OnFlush(self, evt):
+        print("OnFlush")
+        # redScore = self.Scores[1][0]
+        # blueScore = self.Scores[0][0]
+        # if redScore > blueScore:
+        #   winner = redID
+        # elif redScore > blueScore:
+        #   winner = BlueID
+        # else: winner = -1 # draw
+        #
+        # args = AnyTypeToInts(/*many things*/, redID, blueID, winner, self.Scores[1][0], self.Scores[0][0])
+        # sql.insert_db('competition', args)
 
     def OnDetected(self, evt):
         pass

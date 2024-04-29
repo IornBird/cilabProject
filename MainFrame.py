@@ -5,6 +5,7 @@ from JudgeViewer import JudgeViewer
 from AnalysisViewer import AnalysisViewer
 from SQL import *
 
+_ = wx.GetTranslation
 
 class MainFrame(wx.Frame):
     def __init__(self, title: str, size):
@@ -32,6 +33,16 @@ class MainFrame(wx.Frame):
         self.labs.AddPage(self.analysis, "Contestant Analyst")
         sizer.Add(self.labs, 1, wx.EXPAND | wx.ALL)
         self.SetSizerAndFit(sizer)
+
+        menuBar = wx.MenuBar()
+        fileMenu = wx.Menu()
+        doStream = fileMenu.Append(wx.ID_ANY, _("Pause / Resume stream\tP"))
+        dbSetScore = fileMenu.Append(wx.ID_ANY, _("Flush Score And Reset\tCtrl-F"))
+
+        self.Bind(wx.EVT_MENU, self.judge.OnKeyEvent, None, doStream.GetId())
+        self.Bind(wx.EVT_MENU, self.judge.OnFlush, None, dbSetScore.GetId())
+        menuBar.Append(fileMenu, _("&File"))
+        self.SetMenuBar(menuBar)
 
     def DoBackgroundProcess(self):
         wx.CallAfter(self.BGProcess)

@@ -68,6 +68,10 @@ def toInts(nums: list[float]):
     return [round(c) for c in nums]
 
 
+def AnyTypeToInts(vals: list):
+    return [int(c) for c in vals]
+
+
 def toTimeFormat(now):
     T = [now // 60000, (now % 60000) // 10]
     s = str(T[0])
