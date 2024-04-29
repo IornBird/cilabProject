@@ -8,7 +8,7 @@ from ViewerPanes.stream import *
 GUI_OBJ = None
 
 class VideoPane(wx.Panel):
-    def __init__(self, parent, streams: list[str], fps=60):
+    def __init__(self, parent, streams: list[str], playbacks: list[str], fps=60):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
         self.setPrivateMembers()
@@ -27,10 +27,11 @@ class VideoPane(wx.Panel):
         self.timeSlider = GUI_OBJ        # center       | wx.Slider
         self.cameraNum = GUI_OBJ         # wx.SpinCtrl(...)
 
-        self.CreateControls(streams, fps)
+        self.CreateControls(streams, playbacks, fps)
 
         # Connect Events
-        self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)
+        # self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)p
+        self.Bind(wx.EVT_TOOL, self.OnPlayBack, self.playButton)
         self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
         self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
         self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
@@ -44,11 +45,11 @@ class VideoPane(wx.Panel):
         self.stream.Pause()
         super().Destroy()
 
-    def CreateControls(self, streams, fps):
+    def CreateControls(self, streams, playbacks, fps):
         vidoeSizer = wx.BoxSizer(wx.VERTICAL)
 
         # stream
-        self.stream = ShowCapture(self, streams, fps)
+        self.stream = ShowCapture(self, streams, playbacks, fps)
         # ^ wx.media.MediaCtrl(self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize)
         # self.stream.Load(self.videos[1])
         # self.stream.SetPlaybackRate(1)
@@ -129,6 +130,7 @@ class VideoPane(wx.Panel):
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
+        self.cameras = [None, ""]
         self.cameraNo = 1
         self.modified = False
         # self.passLoad = passTo
@@ -187,6 +189,16 @@ class VideoPane(wx.Panel):
             self.stream.Pause()
         else:
             self.stream.Play()
+
+    def OnPlayBack(self, evt):
+        self.stream.toPlayBack()
+        if self.playing:
+            self.stream.Pause()
+        else:
+            self.stream.Play()
+
+    def OnRealTime(self, evt):
+        self.stream.toRealTime(evt)
 
     def OnChangeCma(self, event):
         self.stream.Pause()

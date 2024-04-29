@@ -32,13 +32,14 @@ class CapFrame(wx.Frame):
         
 
 class ShowCapture(wx.Panel):
-    def __init__(self, parent, streams: list[str], fps=60):
+    def __init__(self, parent, streams: list[str], playbacks: list[str], fps=60):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
-        captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
-        # captures = [cv2.VideoCapture(1)]
-        for c in captures:
+        # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+        videos = [cv2.VideoCapture(c) for c in playbacks]
+        captures = [cv2.VideoCapture(b) for b in (0, 1)]
+        for c in [*captures, *videos]:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
             c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
@@ -49,7 +50,7 @@ class ShowCapture(wx.Panel):
         self.streaming = False
         self.modified = False
 
-        self.player = StreamPlayer(captures, fps)
+        self.player = StreamPlayer(captures, videos, fps)
         self.timer = None  # wx.Timer()
         self.bmp = None
         self.Bind(wx.EVT_PAINT, self.OnPaint)
@@ -67,6 +68,7 @@ class ShowCapture(wx.Panel):
 
     def Play(self):
         timeTag("ShowCapture::Play")
+        self.player.toStream(False)
         self.playing = True
         self.player.PlManager.Start()
         # if not self.timer.IsRunning():
@@ -84,12 +86,19 @@ class ShowCapture(wx.Panel):
 
     def Pause(self):
         timeTag("ShowCapture::Pause")
+        self.player.toStream(False)
         self.playing = False
         self.player.PlManager.Pause()
         self.showFrame()
 
     def toRealTime(self, evt=None):
+        self.player.toStream()
         self.player.setTime(0)
+        self.GamePlay()
+
+    def toPlayBack(self):
+        self.player.toStream(False)
+        self.player.setTime(-10000)
 
     def setTime(self, time: int):
         self.player.setTime(self.player.realTime - time)

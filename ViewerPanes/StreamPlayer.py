@@ -9,8 +9,9 @@ class StreamPlayer:
     stream player that can be playback
     this class will be used by some subclass of wx.Panel
     """
-    def __init__(self, streams: list[cv2.VideoCapture], fps=60):
+    def __init__(self, streams: list[cv2.VideoCapture], playbacks: list[cv2.VideoCapture], fps=60):
         self.cameras = streams
+        self.videos = playbacks
         self.camera_no = 0
         self.timePlaying = 0  # 0 means begin of the stream
         self.realTime = 0
@@ -18,6 +19,7 @@ class StreamPlayer:
         self.frameLen = round(1000 / fps)
         self.PlManager = TimeManager()
         self.RTManager = TimeManager()
+        self.isPlayback = False
 
     def chooseStream(self, n: int):
         """
@@ -25,7 +27,9 @@ class StreamPlayer:
         """
         if not (0 <= n < len(self.cameras)):
             raise ValueError("Chosen stream does not exist")
-        self.camera_no = n
+
+    def toStream(self, stream=True):
+        self.isPlayback = not stream
 
     def setTime(self, past_ms: int):
         """
@@ -42,8 +46,13 @@ class StreamPlayer:
         :returns : the frame in current stream
         """
         timeTag("StreamPlayer::getFrame")
-        self.cameras[self.camera_no].set(cv2.CAP_PROP_POS_MSEC, self.timePlaying)
-        ret, frame = self.cameras[self.camera_no].read()
+        if self.isPlayback:
+            cap = self.videos[self.camera_no]
+        else:
+            cap = self.cameras[self.camera_no]
+        # self.cameras[self.camera_no]
+        cap.set(cv2.CAP_PROP_POS_MSEC, self.timePlaying)
+        ret, frame = cap.read()
         timeTag("[return]")
         return frame
 
