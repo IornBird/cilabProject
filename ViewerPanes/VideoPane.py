@@ -28,6 +28,7 @@ class VideoPane(wx.Panel):
         self.cameraNum = GUI_OBJ         # wx.SpinCtrl(...)
 
         self.CreateControls(streams, playbacks, fps)
+        self.setVideos(streams, playbacks)
 
         # Connect Events
         # self.Bind(wx.EVT_TOOL, self.OnPlay, self.playButton)p
@@ -130,19 +131,21 @@ class VideoPane(wx.Panel):
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
-        self.cameras = [None, ""]
+        self.cameras = [None, 0, 1]  # [None, ""]
         self.cameraNo = 1
         self.modified = False
         # self.passLoad = passTo
 
     # Interfaces
-    def setVideos(self, videos: list[str]):
+    def setVideos(self, streams: list[str], videos: list[str]):
         """
         set ALL video that will be switch to
         :param videos:
         """
         self.videos = [None]
+        self.cameras = [None]
         self.videos.extend(videos)
+        self.cameras.extend(streams)
 
         self.cameraNum.SetMax(len(self.videos))
         self.OnChangeCma(None)
@@ -174,11 +177,11 @@ class VideoPane(wx.Panel):
         """
         return self.stream.getTotalLength()  # Length()
 
-    def GameRun(self, pause: bool):
-        if pause:
-            self.stream.GamePause()
-        else:
+    def GameRun(self, runs: bool):
+        if runs:
             self.stream.GamePlay()
+        else:
+            self.stream.GamePause()
 
     # Event Catcher
     def OnPlay(self, event):
@@ -191,17 +194,18 @@ class VideoPane(wx.Panel):
             self.stream.Play()
 
     def OnPlayBack(self, evt):
-        self.stream.toPlayBack()
-        if self.playing:
-            self.stream.Pause()
-        else:
-            self.stream.Play()
+        if not self.stream.player.isPlayback:
+            self.stream.toPlayBack()
+            # self.GameRun(False)
+        self.OnPlay(evt)
 
     def OnRealTime(self, evt):
         self.stream.toRealTime(evt)
+        self.GameRun(True)
+        self.OnPlay(evt)
 
     def OnChangeCma(self, event):
-        self.stream.Pause()
+        # self.stream.Pause()
         self.cameraNo = self.cameraNum.GetValue()
         if self.cameraNo >= len(self.videos):
             self.cameraNo = 1
@@ -211,8 +215,10 @@ class VideoPane(wx.Panel):
 
         # self.stream.Load(self.videos[self.cameraNo])
         self.stream.switchStream(self.cameraNo - 1)
+        self.playing = self.stream.playing
         if self.playing:
             self.stream.Play()
+        self.stream.OnWxTimer(True)
         # self.passLoad()  # <-HERE
 
     def OnSlideEnd(self, evt):

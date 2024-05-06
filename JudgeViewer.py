@@ -65,7 +65,7 @@ class JudgeViewer(wx.Panel):
 
         self.timerProcessing = False
         # demo
-        self.loadVideos(IPs)
+        # self.loadVideos(IPs)
 
         # self.loadVideos([
         #     "C:\\Users\\User\\Downloads\\explaning.mp4",
@@ -171,7 +171,7 @@ class JudgeViewer(wx.Panel):
         # code = evt.GetKeyCode()
         # if code == 32:
         self.gamePaused = not self.gamePaused
-        self.videoPane.GameRun(self.gamePaused)
+        self.videoPane.GameRun(not self.gamePaused)
         # elif code == 0:
         #     raise KeyError("Set keyboard to English(US)")
         # else:

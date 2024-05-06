@@ -39,7 +39,11 @@ class ShowCapture(wx.Panel):
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
         videos = [cv2.VideoCapture(c) for c in playbacks]
         captures = [cv2.VideoCapture(b) for b in (0, 1)]
-        for c in [*captures, *videos]:
+        for c in captures:
+            c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+            c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+            c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+        for c in videos:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
             c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
@@ -77,12 +81,15 @@ class ShowCapture(wx.Panel):
     def GamePlay(self):
         timeTag("ShowCapture::GamePlay")
         self.streaming = True
+        self.playing = True
         self.player.RTManager.Start()
 
     def GamePause(self):
         timeTag("ShowCapture::GamePause")
         self.streaming = False
+        self.playing = False
         self.player.RTManager.Pause()
+        self.showFrame()
 
     def Pause(self):
         timeTag("ShowCapture::Pause")
@@ -94,17 +101,25 @@ class ShowCapture(wx.Panel):
     def toRealTime(self, evt=None):
         self.player.toStream()
         self.player.setTime(0)
+        self.SetBitmap()
         self.GamePlay()
 
     def toPlayBack(self):
         self.player.toStream(False)
-        self.player.setTime(-10000)
+        self.player.setTime(10000)
+        self.SetBitmap()
 
     def setTime(self, time: int):
         self.player.setTime(self.player.realTime - time)
 
     def switchStream(self, n: int):
         self.player.chooseStream(n)
+        self.SetBitmap()
+        # frame = self.player.getFrame()
+        # height, width = frame.shape[:2]
+        # self.bmp.SetSize((width, height))
+
+        # self.SetBitmap()
 
     def getPlayingTime(self):
         return self.player.timePlaying
@@ -141,7 +156,8 @@ class ShowCapture(wx.Panel):
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         wSize = self.GetSize()
-        bmpSize = self.bmp.GetScaledSize()
+        bmpSize = self.bmp.GetSize()
+        # bmpSize = self.bmp.GetScaledSize()
         corner, ratio = putRectangle(*bmpSize, wSize, 1)
         bmpSize = toInts([bmpSize.x * ratio, bmpSize.y * ratio])
         gc.DrawBitmap(self.bmp, *corner, *bmpSize)
@@ -162,12 +178,15 @@ class ShowCapture(wx.Panel):
 
     # Private functions
     def SetBitmap(self):
-        ret, frame = self.player.cameras[self.player.camera_no].read()
-        if not ret:
+        frame = self.player.getFrame()
+        if frame is None:
             return False
-            # raise ConnectionError("Connecting to stream failed")
+        # ret, frame = self.player.cameras[self.player.camera_no].read()
+        # if not ret:
+        #     return False
+        #     # raise ConnectionError("Connecting to stream failed")
         height, width = frame.shape[:2]
-        self.GetParent().SetSize(width, height)
+        # self.GetParent().SetSize(width, height)
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.bmp = wx.Bitmap.FromBuffer(width, height, frame)

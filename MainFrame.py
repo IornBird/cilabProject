@@ -36,7 +36,7 @@ class MainFrame(wx.Frame):
 
         menuBar = wx.MenuBar()
         fileMenu = wx.Menu()
-        doStream = fileMenu.Append(wx.ID_ANY, _("Pause / Resume stream\tP"))
+        doStream = fileMenu.Append(wx.ID_ANY, _("Pause / Resume stream\tCtrl-P"))
         dbSetScore = fileMenu.Append(wx.ID_ANY, _("Flush Score And Reset\tCtrl-F"))
 
         self.Bind(wx.EVT_MENU, self.judge.OnKeyEvent, None, doStream.GetId())

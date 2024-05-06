@@ -27,6 +27,7 @@ class StreamPlayer:
         """
         if not (0 <= n < len(self.cameras)):
             raise ValueError("Chosen stream does not exist")
+        self.camera_no = n
 
     def toStream(self, stream=True):
         self.isPlayback = not stream
@@ -36,7 +37,12 @@ class StreamPlayer:
         play current stream from past_ms before real-time
         :param past_ms: time (in ms) before real-time to be played from
         """
-        self.timePlaying = self.realTime - past_ms
+        if past_ms > 0:
+            self.timePlaying = self.realTime - past_ms
+        else:
+            self.timePlaying = self.realTime
+        if self.timePlaying < 0:
+            self.timePlaying = 0
         self.PlManager.SetTime(self.timePlaying)
 
     def getFrame(self):
@@ -53,6 +59,7 @@ class StreamPlayer:
         # self.cameras[self.camera_no]
         cap.set(cv2.CAP_PROP_POS_MSEC, self.timePlaying)
         ret, frame = cap.read()
+        assert ret
         timeTag("[return]")
         return frame
 
