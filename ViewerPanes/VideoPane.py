@@ -216,8 +216,10 @@ class VideoPane(wx.Panel):
         # self.stream.Load(self.videos[self.cameraNo])
         self.stream.switchStream(self.cameraNo - 1)
         self.playing = self.stream.playing
-        if self.playing:
-            self.stream.Play()
+        # if self.playing:
+        #     self.stream.Play()
+        # else:
+        #     self.stream.Pause()
         self.stream.OnWxTimer(True)
         # self.passLoad()  # <-HERE
 
