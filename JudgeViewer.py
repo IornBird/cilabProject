@@ -2,6 +2,8 @@ import threading
 import time
 
 import wx
+
+from PublicFunctions import AnyTypeToInts
 from ViewerPanes.ScoreSet import ScoreSetPane
 from ViewerPanes.ScoreBar import ScoreBar
 from ViewerPanes.VideoPane import VideoPane
@@ -177,21 +179,52 @@ class JudgeViewer(wx.Panel):
         # else:
         #     evt.Skip()
 
+    def OnImport(self, evt):
+        with open("INFO\\Contestants.txt", 'rt') as f:
+            L = f.read().split('\n')
+            blue = L[0][3:]
+            red = L[1][3:]
+        self.TechRecord[0][0] = blue
+        self.TechRecord[1][0] = red
+        hasRed = sql.select_db('contestant', 'id', f"name='{red}'")
+        if not hasRed:
+            sql.insert_db("contestant", (1001, red, 'unknown'))
+        hasBlue = sql.select_db('contestant', 'id', f"name='{blue}'")
+        if not hasBlue:
+            sql.insert_db("contestant", (1002, blue, 'unknown'))
+        self.timeLine.refreshNames()
+
     def OnFlush(self, evt):
         print("OnFlush")
-        # redScore = self.Scores[1][0]
-        # blueScore = self.Scores[0][0]
-        # if redScore > blueScore:
-        #   winner = redID
-        # elif redScore > blueScore:
-        #   winner = BlueID
-        # else: winner = -1 # draw
-        #
-        # args = AnyTypeToInts(/*many things*/, redID, blueID, winner, self.Scores[1][0], self.Scores[0][0])
-        # sql.insert_db('competition', args)
+        blueID = sql.select_db('contestant', 'id', f"name='{self.TechRecord[0][0]}'")[0][0]
+        redID = sql.select_db('contestant', 'id', f"name='{self.TechRecord[1][0]}'")[0][0]
+        with open("INFO\\Contest Place.txt") as f:
+            d = {}
+            L = f.read().split('\n')
+            for c in L:
+                p = c.split(':_')
+                d[p[0]] = p[1]
+        redScore = self.Scores[1][0]
+        blueScore = self.Scores[0][0]
+        if redScore > blueScore:
+          winner = redID
+        elif redScore > blueScore:
+          winner = blueID
+        else: winner = -1  # draw
 
-    def OnDetected(self, evt):
-        pass
+        args = ('1001',
+                 d['name'], d['date'], d['location'], d['log'],
+                 redID, blueID, winner, self.Scores[1][0], self.Scores[0][0])
+        sql.insert_db('competition', args)
+        self.Reset()
+
+    def Reset(self):
+        for i in range(4):
+            self.Scores[i // 2][i % 2] = 0
+        # self.TechRecord  # format is ([blue name, blue record], [red name, red record])
+        self.TechRecord[0][1].clear()
+        self.TechRecord[1][1].clear()
+
 
     def needReload(self):
         length = self.videoPane.getVideoLength()

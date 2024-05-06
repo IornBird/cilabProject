@@ -121,6 +121,10 @@ class ScoreBar(wx.Panel):
         self.BlueScore.setScore(*(scores[0]))
         self.RedScore.setScore(*(scores[1]))
 
+    def refreshNames(self):
+        self.RedScore.SetName(self.record[0][0])
+        self.BlueScore.SetName(self.record[1][0])
+
     # Event Catchers
     def OnScroll(self, evt):
         val = self.scroll.GetThumbPosition()

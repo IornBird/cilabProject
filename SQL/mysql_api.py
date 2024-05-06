@@ -63,6 +63,7 @@ def insert_db(table_name, values):
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
     command = f"Insert into {table_name} Values {values}"
+    print(f'try execute {command=}.')
     db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
@@ -86,7 +87,7 @@ def update_db(table_name, set_clause, where_clause):
         db.commit()
     print(f'{command=} executed.')
     
-def select_db(table_name, select_clause, where_clause):
+def select_db(table_name, select_clause, where_clause='1'):
     '''
     table_name:    str, name of table to be searched
     select_clause: str, column of result that returned
