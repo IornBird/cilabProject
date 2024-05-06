@@ -15,8 +15,7 @@ import SQL.mysql_api as sql
 IPs = ['192.168.100.127', '192.168.100.108']
 playbacks = [
             "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
-            # "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
-            'C:\\Users\\User\\Desktop\\source\\source3\\Source6\\test.mp4'
+            "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
         ]
 
 techRecord = (
@@ -66,7 +65,7 @@ class JudgeViewer(wx.Panel):
 
         self.timerProcessing = False
         # demo
-        self.loadVideos(IPs)
+        # self.loadVideos(IPs)
 
         # self.loadVideos([
         #     "C:\\Users\\User\\Downloads\\explaning.mp4",
@@ -81,7 +80,7 @@ class JudgeViewer(wx.Panel):
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
                 self.scoreSet = ScoreSetPane(vtSpliter, self.TechRecord, self.Scores)
-                self.videoPane = VideoPane(vtSpliter, playbacks, FPS)  # IPs
+                self.videoPane = VideoPane(vtSpliter, IPs, playbacks, FPS)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.scoreSet, self.videoPane)
             self.timeLine = ScoreBar(hrSpliter, self.TechRecord, self.Scores)
@@ -172,7 +171,7 @@ class JudgeViewer(wx.Panel):
         # code = evt.GetKeyCode()
         # if code == 32:
         self.gamePaused = not self.gamePaused
-        self.videoPane.GameRun(self.gamePaused)
+        self.videoPane.GameRun(not self.gamePaused)
         # elif code == 0:
         #     raise KeyError("Set keyboard to English(US)")
         # else:
