@@ -31,6 +31,8 @@ def init_db():
         cur = db.cursor()
         # TABLE contestant
         cur.execute('CREATE TABLE IF NOT EXISTS contestant (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), nationality VARCHAR(255))')
+        # TABLE picture
+        cur.execute('CREATE TABLE IF NOT EXISTS picture (contestant_id INT AUTO_INCREMENT PRIMARY KEY, picture_path TEXT)')
         # TABLE comp_stats
         cur.execute('CREATE TABLE IF NOT EXISTS comp_stats(contestant_id INT, contest_num INT, contest_tot_secs INT, \
                     wins INT, win_rounds INT, lose_rounds INT, \

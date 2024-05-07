@@ -29,7 +29,7 @@ class ScorePane(wx.Panel):
 
 
     # Interfaces
-    def setName(self, contestant: str):
+    def refreshName(self, contestant: str):
         """
         :param contestant: name of contestant
         """

@@ -66,14 +66,6 @@ class JudgeViewer(wx.Panel):
         self.videoNotLoad = True
 
         self.timerProcessing = False
-        # demo
-        # self.loadVideos(IPs)
-
-        # self.loadVideos([
-        #     "C:\\Users\\User\\Downloads\\explaning.mp4",
-        #     "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
-        #     "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
-        # ])
 
     def CreateControls(self):
         sizer = wx.BoxSizer()
@@ -193,6 +185,7 @@ class JudgeViewer(wx.Panel):
         if not hasBlue:
             sql.insert_db("contestant", (1002, blue, 'unknown'))
         self.timeLine.refreshNames()
+        self.Reset()
 
     def OnFlush(self, evt):
         print("OnFlush")

@@ -38,11 +38,11 @@ class ScoreBar(wx.Panel):
         self.sizer = wx.GridBagSizer(1, 1)
         if True:
             self.BlueScore = ScorePane(self, True, scores[0])
-            self.BlueScore.setName(self.record[0][0])
+            self.BlueScore.refreshName(self.record[0][0])
             self.BlueList = TechBar(self, self.record[0][1])
 
             self.RedScore = ScorePane(self, False, scores[1])
-            self.RedScore.setName(self.record[1][0])
+            self.RedScore.refreshName(self.record[1][0])
             self.RedList = TechBar(self, self.record[1][1])
 
             self.scroll = wx.ScrollBar(self, style=wx.SB_HORIZONTAL)
@@ -71,8 +71,8 @@ class ScoreBar(wx.Panel):
                format is ([name1, record1], [name2, record2])
         """
         self.record = records
-        self.RedScore.SetName(records[0][0])
-        self.BlueScore.SetName(records[1][0])
+        self.BlueScore.SetName(records[0][0])
+        self.RedScore.SetName(records[1][0])
 
     def setPlayingTime(self, time: int):
         """
@@ -122,8 +122,8 @@ class ScoreBar(wx.Panel):
         self.RedScore.setScore(*(scores[1]))
 
     def refreshNames(self):
-        self.RedScore.SetName(self.record[0][0])
-        self.BlueScore.SetName(self.record[1][0])
+        self.RedScore.refreshName(self.record[0][0])
+        self.BlueScore.refreshName(self.record[1][0])
 
     # Event Catchers
     def OnScroll(self, evt):
