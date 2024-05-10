@@ -1,4 +1,21 @@
 # others
+ignore
+Realtime-Action-Recognition-master/outputlog.txt
+Realtime-Action-Recognition-master/errors.txt
+Realtime-Action-Recognition-master/_tutorial.txt
+Realtime-Action-Recognition-master/.gitignore
+Realtime-Action-Recognition-master/data/*
+!Realtime-Action-Recognition-master/data/download_link.md
+Realtime-Action-Recognition-master/data_proc/*
+# !Realtime-Action-Recognition-master/data_proc/raw_skeletons
+# !Realtime-Action-Recognition-master/data_proc/raw_skeletons/*
+Realtime-Action-Recognition-master/output/*
+Realtime-Action-Recognition-master/src/output/*
+Realtime-Action-Recognition-master/src/tf-pose-estimation/models/*
+*pb
+Realtime-Action-Recognition-master/src/modelUI/others
+BodyPix/bodypix-venv
+
 
 
 # Byte-compiled / optimized / DLL files
