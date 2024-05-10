@@ -4,6 +4,7 @@ import cv2
 from PublicFunctions import *
 from ViewerPanes.StreamPlayer import *
 from TimeManager import TimeManager
+import multiprocessing
 
 import threading
 
@@ -72,36 +73,31 @@ class ShowCapture(wx.Panel):
 
     def Play(self):
         timeTag("ShowCapture::Play")
-        self.player.toStream(False)
         self.playing = True
         self.player.PlManager.Start()
-        # if not self.timer.IsRunning():
-        #     self.timer.Start(self.period)
+
+    def Pause(self):
+        timeTag("ShowCapture::Pause")
+        self.playing = False
+        self.player.PlManager.Pause()
+        self.showFrame()
 
     def GamePlay(self):
         timeTag("ShowCapture::GamePlay")
         self.streaming = True
-        self.playing = True
         self.player.RTManager.Start()
 
     def GamePause(self):
         timeTag("ShowCapture::GamePause")
         self.streaming = False
-        self.playing = False
         self.player.RTManager.Pause()
-        self.showFrame()
-
-    def Pause(self):
-        timeTag("ShowCapture::Pause")
-        self.player.toStream(False)
-        self.playing = False
-        self.player.PlManager.Pause()
         self.showFrame()
 
     def toRealTime(self, evt=None):
         self.player.toStream()
         self.player.setTime(0)
         self.SetBitmap()
+        self.Play()
         self.GamePlay()
 
     def toPlayBack(self):
@@ -190,6 +186,8 @@ class ShowCapture(wx.Panel):
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.bmp = wx.Bitmap.FromBuffer(width, height, frame)
+
+        self.Refresh()
 
         return True
 

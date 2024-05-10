@@ -179,3 +179,7 @@ class ScoreBar(wx.Panel):
     def getSliderValue(self):
         self.RedList.setFromNow(self.playingTime)
         return self.BlueList.setFromNow(self.playingTime)
+
+    def Refresh(self, eraseBackground=True, rect=None):
+        self.RedList.Refresh(eraseBackground, rect)
+        self.BlueList.Refresh(eraseBackground, rect)

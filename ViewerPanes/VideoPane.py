@@ -35,7 +35,7 @@ class VideoPane(wx.Panel):
         self.Bind(wx.EVT_TOOL, self.OnPlayBack, self.playButton)
         self.Bind(wx.EVT_TOOL, self.stream.OnNextFrame, self.nxtFrameButton)
         self.Bind(wx.EVT_TOOL, self.stream.OnPreviousFrame, self.preFrameButton)
-        self.Bind(wx.EVT_TOOL, self.stream.toRealTime, self.toRealTimeButton)
+        self.Bind(wx.EVT_TOOL, self.OnRealTime, self.toRealTimeButton)
 
         self.Bind(wx.EVT_SPINCTRL, self.OnChangeCma)
         self.Bind(wx.EVT_SLIDER, self.OnSlide, self.timeSlider)
@@ -127,7 +127,7 @@ class VideoPane(wx.Panel):
 
     def setPrivateMembers(self):
         # self.mode = (ShowCapture(self), wx.media.MediaCtrl(self))
-        self.streaming = True
+        self.streaming = False
         self.playing = False
         self.isSliding = False
         self.videos = [None, ""]  # first element must be null since it's counted from 1
@@ -177,32 +177,32 @@ class VideoPane(wx.Panel):
         """
         return self.stream.getTotalLength()  # Length()
 
-    def GameRun(self, runs: bool):
-        if runs:
+    def GameRun(self):
+        self.streaming = not self.streaming
+        if self.streaming:
             self.stream.GamePlay()
         else:
             self.stream.GamePause()
 
     # Event Catcher
-    def OnPlay(self, event):
+    def OnPlaySwitch(self, event):
         timeTag("VideoPane::OnPlay")
-        self.playing = self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
+        self.playing = not self.stream.playing  # (self.stream.GetState() == wx.media.MEDIASTATE_PLAYING)
         self.timeSlider.SetMax(self.getVideoLength())
         if self.playing:
-            self.stream.Pause()
-        else:
             self.stream.Play()
+        else:
+            self.stream.Pause()
 
     def OnPlayBack(self, evt):
         if not self.stream.player.isPlayback:
             self.stream.toPlayBack()
-            # self.GameRun(False)
-        self.OnPlay(evt)
+        self.OnPlaySwitch(evt)
 
     def OnRealTime(self, evt):
         self.stream.toRealTime(evt)
-        self.GameRun(True)
-        self.OnPlay(evt)
+        # self.GameRun()
+        # self.OnPlaySwitch(evt)
 
     def OnChangeCma(self, event):
         # self.stream.Pause()

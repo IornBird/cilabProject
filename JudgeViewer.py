@@ -89,6 +89,9 @@ class JudgeViewer(wx.Panel):
         self.Bind(wx.EVT_TIMER, self.OnTimer)
 
     # Interfaces
+    def addRecord(self, isBlue, record):
+        self.TechRecord[not isBlue].append(record)
+
     def setRecord(self, t: tuple):
         pass
 
@@ -164,8 +167,8 @@ class JudgeViewer(wx.Panel):
         # assert isinstance(evt, wx.KeyEvent)
         # code = evt.GetKeyCode()
         # if code == 32:
-        self.gamePaused = not self.gamePaused
-        self.videoPane.GameRun(not self.gamePaused)
+        # self.gamePaused = not self.gamePaused
+        self.videoPane.GameRun()
         # elif code == 0:
         #     raise KeyError("Set keyboard to English(US)")
         # else:
@@ -232,7 +235,7 @@ class JudgeViewer(wx.Panel):
         :param time: time set to video
         """
         self.videoPane.setPlayingTime(time)
-        [self.videoPane.OnPlay(None) for i in range(2)]  # get the frame now
+        [self.videoPane.OnPlaySwitch(None) for i in range(2)]  # get the frame now
 
     # Private Function
     def setTechRecord(self):

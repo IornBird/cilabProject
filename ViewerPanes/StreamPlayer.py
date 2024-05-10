@@ -82,7 +82,12 @@ class StreamPlayer:
             self.realTime = self.RTManager.GetPalyingTime()  # += self.frameLen
         if playing:
             self.timePlaying = self.PlManager.GetPalyingTime()  # += self.frameLen
+        self.TimeCtrl()
 
     # Private Functions
     def threadGetFrame(self):
         pass
+
+    def TimeCtrl(self):
+        if self.timePlaying > self.realTime:
+            self.PlManager.SetTime(self.realTime - self.frameLen)
