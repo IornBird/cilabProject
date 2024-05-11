@@ -51,8 +51,7 @@ def init_db():
         # TABLE competition
         cur.execute('CREATE TABLE IF NOT EXISTS competition (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), date DATE, location VARCHAR(255), log LONGTEXT, \
                     red_contestant_id INT, blue_contestant_id INT, winner_id INT, \
-                    red_points INT, blue_points INT, \
-                    red_contestant_id INT, blue_contestant_id INT, winner_id INT)')
+                    red_points INT, blue_points INT)')
         db.commit()
     # db.close()
     print('Database initialized.')

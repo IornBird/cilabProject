@@ -1,12 +1,7 @@
-import wx
-import cv2
-
 from PublicFunctions import *
-from ViewerPanes.StreamPlayer import *
-from TimeManager import TimeManager
-import multiprocessing
+from Streamers.StreamPlayer import *
+from Streamers.StreamStore import StreamStore
 
-import threading
 
 # this class has not used yet
 class CapFrame(wx.Frame):
@@ -40,6 +35,9 @@ class ShowCapture(wx.Panel):
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
         videos = [cv2.VideoCapture(c) for c in playbacks]
         captures = [cv2.VideoCapture(b) for b in (0, 1)]
+
+        # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
+
         for c in captures:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -47,7 +45,7 @@ class ShowCapture(wx.Panel):
         for c in videos:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-            c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+            c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'XVID'))
 
         self.drawing = False
         self.period = round(1000 / fps)
@@ -86,11 +84,13 @@ class ShowCapture(wx.Panel):
         timeTag("ShowCapture::GamePlay")
         self.streaming = True
         self.player.RTManager.Start()
+        # [c.Play() for c in self.store]
 
     def GamePause(self):
         timeTag("ShowCapture::GamePause")
         self.streaming = False
         self.player.RTManager.Pause()
+        # [c.Pause() for c in self.store]
         self.showFrame()
 
     def toRealTime(self, evt=None):
@@ -320,7 +320,6 @@ def test_s5():
     import importlib
     s5_test = importlib.import_module('Realtime-Action-Recognition-master.src.s5_test')
     s5_test_main = s5_test.s5_test_main
-    import threading
 
     model_path = fr'D:\NCU\Special_Project\cilabProject\Realtime-Action-Recognition-master\model\trained_classifier.pickle'
     data_type = fr'video'

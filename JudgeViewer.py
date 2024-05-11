@@ -16,9 +16,14 @@ import SQL.mysql_api as sql
 # demo
 IPs = ['192.168.100.127', '192.168.100.108']
 playbacks = [
-            "C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
+            #"C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
+            #"E:\\專題\\test.mp4",
+            "videos/0.avi",
             "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
         ]
+
+f = open("./videos/0.avi", 'rb')
+f.close()
 
 techRecord = (
             ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK), TechRecord(2000, Tech.PUNCH, Tech.HEAD)]],
