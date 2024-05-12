@@ -36,7 +36,7 @@ class ShowCapture(wx.Panel):
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
         videos = [cv2.VideoCapture(c) for c in playbacks]
         # captures = [cv2.VideoCapture(b) for b in (0, 1)]
-        captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0, 1)]
+        captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
 
         # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
 
@@ -61,7 +61,7 @@ class ShowCapture(wx.Panel):
         self.bmp = None
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        time.sleep(3)
+        time.sleep(5)
         self.SetBitmap()
         # self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # if self.SetBitmap():

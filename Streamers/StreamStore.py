@@ -5,6 +5,7 @@ import time
 from TimeManager import TimeManager
 from PublicFunctions import timeTag
 
+
 class StreamStore:
     def __init__(self, streamSource: str| int, file: str, fps=60):
         manager = multiprocessing.Manager()
