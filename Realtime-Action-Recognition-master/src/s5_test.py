@@ -77,6 +77,11 @@ if True:  # Include project path
     from utils.lib_tracker import Tracker
     from utils.lib_classifier import ClassifierOnlineTest
     from utils.lib_classifier import *  # Import all sklearn related libraries
+    
+    
+    # openpose packages
+    sys.path.append(ROOT + "src/githubs/tf-pose-estimation")
+    from tf_pose import common
 
 
 def par(path):  # Pre-Append ROOT to the path if it's not absolute
@@ -364,7 +369,27 @@ def append_log_and_print(log_path, text):
     print(text)
 
 
-def is_hit(attack_point, hit_area, threshold=0.1):
+def is_in_area(attack_point, hit_area, threshold=0.5):
+    ''' 
+    Check if a attack point is in the pointing area 
+    attack_point: (x, y)
+    hit_area: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)]
+    '''
+    if len(hit_area) != 4:
+        return False
+    x1, y1 = hit_area[0]
+    x2, y2 = hit_area[1]
+    x3, y3 = hit_area[2]
+    x4, y4 = hit_area[3]
+    x1 -= threshold
+    x2 += threshold
+    y1 -= threshold
+    y4 += threshold
+    if x1 <= attack_point[0] <= x2 and y1 <= attack_point[1] <= y4:
+        return True
+    return False
+
+def is_hit(attack_point, hit_area, threshold=0.5):
     ''' 
     Check if a person hit the pointing area 
     attack_point: (x, y)
@@ -372,15 +397,12 @@ def is_hit(attack_point, hit_area, threshold=0.1):
     '''
     if len(hit_area) != 4:
         return False
-    hit_area = np.array(hit_area)
-    hit_area = np.vstack((hit_area, hit_area[0]))
-    hit_area = hit_area[:-1]
-    hit_area = hit_area - attack_point
-    hit_area = np.linalg.norm(hit_area, axis=1)
-    return np.min(hit_area) < threshold
+    if is_in_area(attack_point, hit_area, threshold):
+        return True
+    return False    
 
 
-def is_hit_pt(attack_point, hit_point, threshold=0.1):
+def is_hit_pt(attack_point, hit_point, threshold=0.5):
     return np.linalg.norm(attack_point - hit_point) < threshold
 
 
@@ -391,28 +413,32 @@ def check_pointing_area(img_w, img_h, humans, dict_id2skeleton):
     '''
     pt_list = []
     ret_list = []
-    for human in humans:
-        r_wrist = human.get_part_point(lib_commons.CocoPart.RWrist)
-        l_wrist = human.get_part_point(lib_commons.CocoPart.LWrist)
-        r_andke = human.get_part_point(lib_commons.CocoPart.RAnkle)
-        l_andke = human.get_part_point(lib_commons.CocoPart.LAnkle)
+    atk_name = ['r_wrist', 'l_wrist', 'r_andke', 'l_andke']
+    for human_id, human in enumerate(humans):
+        r_wrist = human.get_part_point(common.CocoPart.RWrist)
+        l_wrist = human.get_part_point(common.CocoPart.LWrist)
+        r_andke = human.get_part_point(common.CocoPart.RAnkle)
+        l_andke = human.get_part_point(common.CocoPart.LAnkle)
         atk_pt = [r_wrist, l_wrist, r_andke, l_andke]
         hit_area = []
-        for h in humans:
+        for h_id, h in enumerate(humans):
             if h == human:
                 continue
-            hit_area.append([h.id, h.get_face_box_new(
-                img_w, img_h), h.get_body_box_new(img_w, img_h)])
+            hit_area.append([h_id, h.get_face_box_new(img_w, img_h), 
+                             h.get_body_box_new(img_w, img_h)])
 
         for i, pt in enumerate(atk_pt):
+            if pt is None:
+                continue
             for j, area in enumerate(hit_area):
                 if is_hit(pt, area[1]):
-                    pt_list.append((human.id, i, j, True))
+                    pt_list.append((human_id, atk_name[i], 'head'))
                 if is_hit(pt, area[2]):
-                    pt_list.append((human.id, i, j, True))
+                    pt_list.append((human_id, atk_name[i], 'body'))
 
-        ret_list.append([human.id, is_hit_pt(atk_pt[0], atk_pt[1])])
-    return ret_list
+        if atk_pt[0] is not None and atk_pt[1] is not None:
+            ret_list.append([human_id, is_hit_pt(atk_pt[0], atk_pt[1])])
+    return pt_list
 
 
 def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH, output_folder=args.output_folder, img_displayer_on=False):
@@ -427,7 +453,7 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
     # log_path = DST_FOLDER + "log.txt"
     log_path = os.path.join(dst_folder, "log.txt")
     init_log(log_path)
-    predicted_label_cnt = dict.fromkeys(list(CLASSES) + ['None'], 0)
+    predicted_label_cnt = [dict.fromkeys(list(CLASSES) + ['None'], 0)] * 2
     append_log_and_print(log_path, f"🟢 Start processing {data_path} ...")
 
     # -- Detector, tracker, classifier
@@ -438,7 +464,7 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
 
     multiperson_classifier = MultiPersonClassifier(model_path, CLASSES)
 
-    # -- Image reader and displayer
+    # -- Image reader and 
     images_loader = select_images_loader(data_type, data_path)
     print(f'{data_type=}\n{data_path=}\n{images_loader=}')
     append_log_and_print(log_path, '🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴')
@@ -497,23 +523,31 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
                                        skeleton_detector, multiperson_classifier, dict_id2label, scale_h)
 
             # -- Check if a person hit the pointing area
-            # (contestant_id, action, hit_area, hit_or_not)
+            # (contestant_id, action, hit_area)
             pt_list = check_pointing_area(
                 img.shape[1], img.shape[0], humans, dict_id2skeleton)
+            if len(pt_list):
+                append_log_and_print(log_path, f'\n🟢 {pt_list=}\n')
+            else:
+                append_log_and_print(log_path, f'\n🟡 {pt_list=} No one hit the pointing area\n')
 
             # Print label of a person
             if len(dict_id2skeleton):
-                min_id = min(dict_id2skeleton.keys())
-                append_log_and_print(
-                    log_path, f"predicted label is : {dict_id2label[min_id]}")
-                # dict_id2label[min_id] is empty string
-                if len(dict_id2label[min_id]) == 0:
-                    predicted_label_cnt['None'] += 1
-                else:
-                    predicted_label_cnt[dict_id2label[min_id]] += 1
+                append_log_and_print(log_path, f'{dict_id2label=}\n')
+                ccnt = 0
+                for i in dict_id2label.keys():
+                    ccnt += 1
+                    if ccnt > 2:
+                        break
+                    append_log_and_print(log_path, f'frame {ith_img} skeleton {i} label: {dict_id2label[i]}')
+                    # dict_id2label[i] is empty string
+                    if len(dict_id2label[i]) == 0:
+                        predicted_label_cnt[ccnt-1]['None'] += 1
+                    else:
+                        predicted_label_cnt[ccnt-1][dict_id2label[i]] += 1
 
             # -- Display image, and write to video.avi
-            append_log_and_print(log_path, '🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴')
+            append_log_and_print(log_path, '🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴🔴\n')
             if img_displayer_on:
                 img_displayer.display(img_disp, wait_key_ms=1)
             if data_type != 'webcam':
@@ -541,9 +575,11 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
         append_log_and_print(
             log_path, f"🟢 Predicted label count: {predicted_label_cnt}")
         append_log_and_print(log_path, f'Predicted label percentage: ')
-        for label, count in predicted_label_cnt.items():
-            append_log_and_print(
-                log_path, f'{label}: {count/(ith_img+1)*100:.2f}%')
+        for ith_human, plabel_cnt in enumerate(predicted_label_cnt):
+            append_log_and_print(log_path, f'human {ith_human} total frames: {ith_img+1}')
+            for label, count in plabel_cnt.items():
+                append_log_and_print(
+                    log_path, f'{label}: {count/(ith_img+1)*100:.2f}%')
 
 
 # -- Main
@@ -552,7 +588,7 @@ if __name__ == "__main__":
                  args.output_folder, img_displayer_on=False)
 
 
-'''
+r'''
 touch output/video-11m14s-31-x3htXTI7nDI/log.txt | \
     \
 python src/s5_test.py \
@@ -563,7 +599,7 @@ python src/s5_test.py \
         \
     tee output/video-11m14s-31-x3htXTI7nDI/log.txt
 '''
-'''
+r'''
 touch output/AxeKickLeft_1/log.txt | \
     \
 python src/s5_test.py \
@@ -574,10 +610,31 @@ python src/s5_test.py \
         \
     tee output/AxeKickLeft_1/log.txt
 '''
-'''
+r'''
 python src/s5_test.py \
     --model_path model/trained_classifier.pickle \
     --data_type webcam \
     --data_path 'https://192.168.219.229:8080/video' \
+    --output_folder output/webcam
+'''
+r'''
+python src/s5_test.py `
+    --model_path model/trained_classifier.pickle `
+    --data_type video `
+    --data_path "..\..\Taekwondo_media\self_rec\FHD-240FPS\cut\AxeKickLeft\AxeKickLeft_1.mp4" `
+    --output_folder output
+'''
+r'''
+python src/s5_test.py `
+    --model_path model/trained_classifier.pickle `
+    --data_type video `
+    --data_path ..\..\Taekwondo_media\video\video-11m14s-31-x3htXTI7nDI.mp4 `
+    --output_folder output
+'''
+r'''
+python src/s5_test.py `
+    --model_path model/trained_classifier.pickle `
+    --data_type webcam `
+    --data_path 'https://192.168.0.12:8080/video' `
     --output_folder output/webcam
 '''

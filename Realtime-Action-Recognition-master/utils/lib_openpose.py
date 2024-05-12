@@ -6,10 +6,7 @@ The code is copied and modified from src/githubs/tf-pose-estimation
 '''
 
 # -- Libraries
-from tf_pose import common
-from tf_pose.estimator import TfPoseEstimator
-from tf_pose.networks import get_graph_path, model_wh
-if True:  # Include project path
+if True: # Include project path
     import sys
     import os
     ROOT = os.path.dirname(os.path.abspath(__file__))+"/../"
@@ -25,6 +22,9 @@ import cv2
 
 # openpose packages
 sys.path.append(ROOT + "src/githubs/tf-pose-estimation")
+from tf_pose import common
+from tf_pose.estimator import TfPoseEstimator
+from tf_pose.networks import get_graph_path, model_wh
 
 
 # -- Settings
