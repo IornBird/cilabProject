@@ -2,96 +2,130 @@ import cv2
 
 import multiprocessing
 import time
+from TimeManager import TimeManager
+from PublicFunctions import timeTag
 
 class StreamStore:
     def __init__(self, streamSource: str| int, file: str, fps=60):
-        # self.capture = cv2.VideoCapture(streamSource)
+        manager = multiprocessing.Manager()
+
         self.streamSrc = streamSource
         self.file = file
-        # f = open(self.file, 'wb')
-        # f.write(bytes([97, 98, 99]))
-        # f.close()
-        manager = multiprocessing.Manager()
-        self.shared_Frame = manager.list()
-        self.shared_Frame.append(None)
+
         self.recording_process = None  # will be a multiprocessing.Process
         self.fps = fps
-        self.doRelease = manager.list()
-        self.doRelease.append(False)
-        self.running = False
+
+        self.shared_Frame = manager.list()
+
+        self.doRecord = manager.list()
+        self.doProcess = manager.list()
+
+        self.timer = manager.list()
+
+        self.setSharedVars()
+
+    def setSharedVars(self):
+        self.shared_Frame.append(None)
+        self.doRecord.append(False)
+        self.doProcess.append(False)
+        self.timer.append(TimeManager())
+
 
     def record_frames(self):
         """
         This function will be run in a separate process.
         It continuously saves frames to the specified file.
         """
-        print("record")
+        timeTag("record")
         try:
             cap = cv2.VideoCapture(self.streamSrc)
+            assert cap.isOpened()
             fourcc = cv2.VideoWriter.fourcc(*'XVID')
             out = cv2.VideoWriter(self.file, fourcc, self.fps, (640, 480))
-            start_time = time.time()
+            # timer = TimeManager()
+            self.timer[0].Start()
             frmNum = 0
-            print('loop')
-            while True:
-                ret, frame = cap.read()
-                if ret:
-                    while frmNum < (time.time() - start_time) * self.fps:
-                        out.write(frame)
-                        frmNum += 1
-                    if time.time() - start_time >= 5:
-                        out.release()
-                        cap.release()
-                        cv2.destroyAllWindows()
+            timeTag('[loop]')
+            while self.doProcess[0]:
+                if self.timer[0].running:
+                    ret, frame = cap.read()
+                    if ret:
+                        self.shared_Frame[0] = frame
+                        while frmNum < (self.timer[0].GetPalyingTime()) * self.fps / 1000:
+                            out.write(frame)
+                            frmNum += 1
+                    else:
                         break
-                else:
-                    break
+                    if self.timer[0].GetPalyingTime() >= 5000:
+                        out.release()
+
+                        out = cv2.VideoWriter(self.file, fourcc, self.fps, (640, 480))
+                        self.timer[0].SetTime(0)
+                        frmNum = 0
+                        timeTag("[re-record]")
+            out.release()
+            cap.release()
+            cv2.destroyAllWindows()
         except Exception as e:
             print("Exception")
-            self.running = False
-            return
+            self.doProcess[0] = False
 
     def read(self):
-        return self.shared_Frame[0]
+        success = self.shared_Frame[0] is not None
+        return success, self.shared_Frame[0]
+
+    def set(self, mode, time):
+        """
+        dummy, for not modifying Interfaces in other files
+        """
+        pass
 
     def Play(self):
         """
         start or resume streaming and recording
         """
-        if self.recording_process is None or not self.recording_process.is_alive():
+        timeTag("Play")
+        if self.canRecord():
+            self.doRecord[0] = True
+            self.timer[0].Start()
+        else:
             self.recording_process = multiprocessing.Process(target=self.record_frames)
-            self.doRelease = False
-            self.running = True
+            self.doRecord[0] = True
+            self.doProcess[0] = True
             self.recording_process.start()
-            print("join")
-            self.recording_process.join()
-            self.recording_process.close()
-            print("\tjoined")
-            self.recording_process = None
-
 
     def Pause(self):
         """
         pause streaming and recording
         frame after Pause() and before Play() will be ignored
         """
-        if self.recording_process is not None and self.recording_process.is_alive():
-            self.shared_Frame.__setitem__(0, True)
-            # self.doRelease = True
+        timeTag("Pause")
+        if self.canRecord():
+            self.timer[0].Pause()
+            self.doRecord[0] = False
+
+    def Stop(self):
+        timeTag("Stop")
+        self.doProcess[0] = False
+        print('\tdoProcess set')
+        if self.canRecord():
             print("join")
             self.recording_process.join()
             print("\tjoined")
-            self.recording_process.close()
+            assert isinstance(self.recording_process, multiprocessing.Process)
+            # self.recording_process.close()
             self.recording_process = None
 
+    # def __del__(self):
+    #     self.Stop()
 
-def sleep(t):
-    dt = time.time() + t
-    while time.time() < dt:
-        pass
+    # Private Functions
+    def canRecord(self):
+        return self.recording_process is not None and self.recording_process.is_alive()
 
 
 FILE = '../videos/0.avi'
+
 
 def record():
     cap = cv2.VideoCapture(0)
@@ -136,6 +170,13 @@ if __name__ == '__main__':
         ss = StreamStore(0, FILE)
         print("record")
         ss.Play()
+        time.sleep(7)
+        print(f"getting frame when recording: {ss.read()[0]}")
+        # ss.Pause()
+        # time.sleep(6)
+        # ss.Play()
+        time.sleep(7)
+        ss.Stop()
         print("check if record in another process successes")
         print(canRead())
         print("end")
