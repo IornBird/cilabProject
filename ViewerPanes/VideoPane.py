@@ -1,9 +1,7 @@
-import wx
 import wx.xrc
 import wx.media
 
-from PublicFunctions import *
-from ViewerPanes.stream import *
+from Streamers.stream import *
 
 GUI_OBJ = None
 
