@@ -5,6 +5,7 @@ from PublicFunctions import timeTag
 from TimeManager import TimeManager
 from Streamers.StreamStore import StreamStore
 
+
 class StreamPlayer:
     """
     stream player that can be playback

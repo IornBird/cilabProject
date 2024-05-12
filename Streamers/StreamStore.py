@@ -5,8 +5,6 @@ import time
 from TimeManager import TimeManager
 from PublicFunctions import timeTag
 
-import wx
-
 class StreamStore:
     def __init__(self, streamSource: str| int, file: str, fps=60):
         manager = multiprocessing.Manager()
@@ -22,12 +20,16 @@ class StreamStore:
         self.doRecord = manager.list()
         self.doProcess = manager.list()
 
+        self.timer = manager.list()
+
         self.setSharedVars()
 
     def setSharedVars(self):
         self.shared_Frame.append(None)
         self.doRecord.append(False)
         self.doProcess.append(False)
+        self.timer.append(TimeManager())
+
 
     def record_frames(self):
         """
@@ -37,6 +39,7 @@ class StreamStore:
         timeTag("record")
         try:
             cap = cv2.VideoCapture(self.streamSrc)
+            assert cap.isOpened()
             fourcc = cv2.VideoWriter.fourcc(*'XVID')
             out = cv2.VideoWriter(self.file, fourcc, self.fps, (640, 480))
             timer = TimeManager()
@@ -89,8 +92,6 @@ class StreamStore:
             self.doRecord[0] = True
             self.doProcess[0] = True
             self.recording_process.start()
-        else:
-            self.doRecord[0] = True
 
     def Pause(self):
         """
