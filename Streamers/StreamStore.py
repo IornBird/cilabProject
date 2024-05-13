@@ -33,14 +33,10 @@ args are all str, img_displayer_on is bool, True iff show frame in other window
 
 
 class StreamStore2:
-    WEBCAM = 'webcam'
-    VIDEO = 'video'
-    def __init__(self, streamSource: str| int, mode, fps, SD: SharedData):
+    def __init__(self, streamSource: str| int, SD: SharedData):
         self.SD = SD
 
         self.streamSrc = streamSource
-        self.mode = mode
-        self.fps = fps
         self.recording_process = None
         self.id = SD.createNew()
 
@@ -48,7 +44,7 @@ class StreamStore2:
         if self.recording_process is None or not self.recording_process.is_alive():
             args = (
                 'Realtime-Action-Recognition-master/model/trained_classifier.pickle',
-                self.mode,
+                'webcam',
                 self.streamSrc,
                 'output/webcam',
                 self.id
@@ -78,6 +74,29 @@ class StreamStore2:
             self.recording_process.close()
             self.recording_process = None
 
+
+class VideoReader:
+    def __init__(self, SD: SharedData, ID: int):
+        self.SD = SD
+
+        self.recording_process = None
+        self.id = ID
+
+        self.time = 0
+
+    def read(self):
+        frame = self.SD.getResultFrame(self.id, round(self.time * 60 / 1000))
+        success = frame is not None
+        return success, frame
+
+    def set(self, mode, time):
+        """
+        set timer playing on Result
+        """
+        if mode == cv2.CAP_PROP_POS_MSEC:
+            self.time = time
+        else:
+            self.time += round(time * 1000 / 60)
 
 class StreamStore:
     def __init__(self, streamSource: str| int, file: str, fps=60, id=0):
