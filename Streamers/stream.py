@@ -32,11 +32,18 @@ class ShowCapture(wx.Panel):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
 
+        SD = SharedData(multiprocessing.Manager(), 640, 480)
+
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
+
+        # captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
         videos = [cv2.VideoCapture(c) for c in playbacks]
-        # captures = [cv2.VideoCapture(b) for b in (0, 1)]
-        captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
+
+        captures = [cv2.VideoCapture(b) for b in (0, 1)]
+
+        # captures = [StreamStore2(b, SD) for b in (0,)]
+        # videos = [VideoReader(SD, i) for i in range(len(captures))]
 
         # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
 
