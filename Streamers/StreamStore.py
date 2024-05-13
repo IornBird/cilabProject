@@ -5,11 +5,13 @@ import time
 from TimeManager import TimeManager
 from PublicFunctions import timeTag
 
-# import os
-# import sys
-# OPENPOSE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/../Realtime-Action-Recognition-master/src"
-# sys.path.append(OPENPOSE_PATH)
-# from s5_test import s5_test_main
+from Streamers.SharedData import SharedData
+
+import os
+import sys
+OPENPOSE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/../Realtime-Action-Recognition-master/src"
+sys.path.append(OPENPOSE_PATH)
+from s5_test import s5_test_main
 
 # E:\專題\JudgeWatcer\Realtime-Action-Recognition-master\src\s5_test.py
 
@@ -28,6 +30,74 @@ args are all str, img_displayer_on is bool, True iff show frame in other window
 --data_path ..../Taekwondo_media/video/video-11m14s-31-x3htXTI7nDI.mp4 
 --output_folder output 
 '''
+
+
+class StreamStore2:
+    def __init__(self, streamSource: str| int, SD: SharedData):
+        self.SD = SD
+
+        self.streamSrc = streamSource
+        self.recording_process = None
+        self.id = SD.createNew()
+
+    def Play(self):
+        if self.recording_process is None or not self.recording_process.is_alive():
+            args = (
+                'Realtime-Action-Recognition-master/model/trained_classifier.pickle',
+                'webcam',
+                self.streamSrc,
+                'output/webcam',
+                self.id
+            )
+            self.recording_process = multiprocessing.Process(target=s5_test_main, args=args)
+            self.recording_process.start()
+    def read(self):
+        frame = self.SD.getStreamFrame(self.id)
+        success = frame is not None
+        return success, frame
+
+    def set(self, mode, time):
+        """
+        dummy, for not modifying Interfaces in other files
+        """
+        pass
+
+    def Pause(self):
+        """
+        dummy, for not modifying Interfaces in other files
+        """
+        pass
+
+    def Stop(self):
+        if self.recording_process is not None and self.recording_process.is_alive():
+            self.recording_process.terminate()
+            self.recording_process.close()
+            self.recording_process = None
+
+
+class VideoReader:
+    def __init__(self, SD: SharedData, ID: int):
+        self.SD = SD
+
+        self.recording_process = None
+        self.id = ID
+
+        self.time = 0
+
+    def read(self):
+        frame = self.SD.getResultFrame(self.id, round(self.time * 60 / 1000))
+        success = frame is not None
+        return success, frame
+
+    def set(self, mode, time):
+        """
+        set timer playing on Result
+        """
+        if mode == cv2.CAP_PROP_POS_MSEC:
+            self.time = time
+        else:
+            self.time += round(time * 1000 / 60)
+
 class StreamStore:
     def __init__(self, streamSource: str| int, file: str, fps=60, id=0):
         manager = multiprocessing.Manager()
@@ -179,7 +249,7 @@ def canRead():
     return ret
 
 
-_record_test = False
+_record_test = True
 if __name__ == '__main__':
     f = open(FILE, 'rb')
     print(f.read()[:10])
@@ -195,7 +265,7 @@ if __name__ == '__main__':
         print("record")
         ss.Play()
         time.sleep(5)
-        # print(f"getting frame when recording: {ss.read()[0]}")
+        print(f"getting frame when recording: {ss.read()[0]}")
         print(f"read video during writing: {canRead()}")
         ss.Pause()
         time.sleep(6)
