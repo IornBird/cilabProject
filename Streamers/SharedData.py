@@ -7,20 +7,21 @@ import multiprocessing.managers
 import numpy as np
 
 class SharedData:
-    def __init__(self, width, height):
-        self._manager = multiprocessing.Manager()
-        self.MODIFIED = self._manager.list()
+    def __init__(self, _manager, width, height):
+        self.MODIFIED = _manager.list()
 
         # for frame from stream and used by both test_5s and GUI
-        self.SH_STREAM = self._manager.list()
+        self.SH_STREAM = _manager.list()
 
         # for frame from output and used by both test_5s and GUI
-        self.SH_RESULT = self._manager.list()
+        self.SH_RESULT = _manager.list()
         self.rstOffset = 0
 
         self.ID = 0
         self.width = width
         self.height = height
+
+        self.flushLen = 512
 
     def createNew(self):
         """
@@ -42,25 +43,27 @@ class SharedData:
 
     def addResultFrame(self, id: int, frame):
         self.SH_RESULT[id].append(frame)
-        if len(self.SH_RESULT[id]) > 1024:
-            with open(f"SharedFiles/RSLT{id}.tmp", 'wb') as f:
-                for i in range(1024):
+        if len(self.SH_RESULT[id]) > self.flushLen:
+            with open(f"SharedFiles/RSLT{id}.tmp", 'ab') as f:
+                for i in range(self.flushLen):
                     frame = self.SH_RESULT[id][0]
                     self.writeArray(frame, f)
                     self.SH_RESULT[id].pop(0)
-                self.rstOffset += 1024
+                    self.rstOffset += 1
 
-    def getResultFrame(self, id: int, frameNum: int) -> np.ndarray:
+    def getResultFrame(self, id: int, frameNum: int) -> np.ndarray | None:
         """
         get [frame]-th frame since fist stored *NOT MS*
         :param frameNum: nums of frame to return
         :return: that frame
         """
-        if frameNum >= self.rstOffset:
+        if frameNum >= self.rstOffset + len(self.SH_RESULT[id]):
+            return None
+        elif frameNum >= self.rstOffset:
             return self.SH_RESULT[id][frameNum - self.rstOffset]
 
         with open(f"SharedFiles/RSLT{id}.tmp", 'rb') as f:
-            f.seek(frameNum * self.height * self.width)
+            f.seek(frameNum * self.height * self.width, 0)
             frame = f.read(3 * self.height * self.width)
 
             ans = np.empty((self.height, self.width, 3))
@@ -85,4 +88,3 @@ class SharedData:
                 f.write(bytes(pixel))
 
 
-sharedData = SharedData(640, 480)
