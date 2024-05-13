@@ -54,20 +54,20 @@ class ScorePane(wx.Panel):
         self.Refresh()
 
     # Private Functions
-    def setTextSize(self, dc: wx.PaintDC):
+    def setTextSize(self, gc: wx.GraphicsContext):
         size = self.namePane.GetSize()
         tf = wx.AffineMatrix2D()
-        gct = wx.GraphicsContext.Create(dc)
-        gct.SetFont(self.GetFont(), wx.BLACK)
+        # gct = wx.GraphicsContext.Create(dc)
+        gc.SetFont(self.GetFont(), wx.BLACK)
         tSize = self.GetTextExtent(self.nameLabel)
 
         t_size_copy = [*tSize]
         corner_copy = [0, 0]
 
-        c, times = putRectangle(*tSize, size, 0.8)
+        c, times = putRectangle(tSize[0], tSize[1], size, 0.8)
         tf.Translate(c[0] + self.numberBoard.GetSize()[0], c[1])
         tf.Scale(times, times)
-        gct.SetTransform(gct.CreateMatrix(tf))
+        gc.SetTransform(gc.CreateMatrix(tf))
 
         t_size_copy = tf.TransformPoint(t_size_copy)
         corner_copy = tf.TransformPoint(corner_copy)
@@ -75,14 +75,15 @@ class ScorePane(wx.Panel):
         print("from: ", *corner_copy)
         print("to:   ", *t_size_copy)
 
-        gct.DrawText(self.nameLabel, 0, 0)
+        gc.DrawText(self.nameLabel, 0, 0)
+        del tf
         # detectFont(size, self.nameLabel, self.getName(), ratio=0.8)
         # self.namePane.SetFont(self.nameLabel.GetFont())
+        # gct.Destroy()
 
     def OnPaint(self, evt):
         dc = wx.PaintDC(self)
         dc.Clear()
-        self.setTextSize(dc)
         gc = wx.GraphicsContext.Create(dc)
         if gc:
             size = self.numberBoard.GetSize()
@@ -105,5 +106,13 @@ class ScorePane(wx.Panel):
             cornerN = (cornerN[0] + secConer[0], cornerN[1] + secConer[1])
             gc.SetFont(self.numberBoard.GetFont(), wx.BLACK)
             gc.DrawText(s, *toInts(cornerN))
+            self.setTextSize(gc)
 
         gc.Destroy()
+        self.RefershAgain()
+
+    def RefershAgain(self):
+        if self.needRefersh:
+            self.Refresh()
+            self.Update()
+        self.needRefersh = not self.needRefersh
