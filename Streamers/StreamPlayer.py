@@ -55,13 +55,13 @@ class StreamPlayer:
 
     def RTPlay(self):
         self.RTManager.Start()
-        for c in self.cameras:
-            c.Play()
+        # for c in self.cameras:
+        #     c.Play()
 
     def RTPause(self):
         self.RTManager.Pause()
-        for c in self.cameras:
-            c.Pause()
+        # for c in self.cameras:
+        #     c.Pause()
 
     def getFrame(self):
         """
