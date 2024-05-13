@@ -201,7 +201,9 @@ def select_images_loader(src_data_type, src_data_path):
             folder_path=src_data_path)
 
     elif src_data_type == "webcam":
-        if src_data_path == "":
+        if isinstance(src_data_path, int):
+            webcam_idx = src_data_path
+        elif src_data_path == "":
             webcam_idx = 0
         elif src_data_path.isdigit():
             webcam_idx = int(src_data_path)
@@ -292,8 +294,8 @@ def draw_result_img(img_disp, ith_img, humans, dict_id2skeleton,
                           dsize=(desired_cols, img_disp_desired_rows))
 
     # Draw all people's skeleton
-    # skeleton_detector.draw(img_disp, humans, draw_pta=True)
-    skeleton_detector.draw(img_disp, humans)
+    # skeleton_detector.draw(img_disp, humans)
+    skeleton_detector.draw(img_disp, humans, draw_pta=True)
 
     # Draw bounding box and label of each person
     if len(dict_id2skeleton):
@@ -364,12 +366,12 @@ def init_log(log_path):
 
 def append_log_and_print(log_path, text):
     ''' Append text to log file '''
-    with open(log_path, "a", encoding="utf_8_sig") as f:
+    with open(log_path, "a", encoding='UTF-8') as f:
         f.write(text + "\n")
     print(text)
 
 
-def is_in_area(attack_point, hit_area, threshold=0.5):
+def is_in_area(img_shape, attack_point, hit_area, threshold=0.025):
     ''' 
     Check if a attack point is in the pointing area 
     attack_point: (x, y)
@@ -377,19 +379,21 @@ def is_in_area(attack_point, hit_area, threshold=0.5):
     '''
     if len(hit_area) != 4:
         return False
-    x1, y1 = hit_area[0]
-    x2, y2 = hit_area[1]
-    x3, y3 = hit_area[2]
-    x4, y4 = hit_area[3]
-    x1 -= threshold
-    x2 += threshold
-    y1 -= threshold
-    y4 += threshold
+    x1, y1 = hit_area[0] # top left
+    x2, y2 = hit_area[1] # top right
+    x3, y3 = hit_area[2] # bottom left
+    x4, y4 = hit_area[3] # bottom right
+    x1 -= threshold*min(img_shape)
+    x2 += threshold*min(img_shape)
+    y1 -= threshold*min(img_shape)
+    y4 += threshold*min(img_shape)
+    # print(f'{x1=}\n{x2=}\n{y1=}\n{y4=}\n{attack_point=}')
     if x1 <= attack_point[0] <= x2 and y1 <= attack_point[1] <= y4:
         return True
     return False
 
-def is_hit(attack_point, hit_area, threshold=0.5):
+
+def is_hit(img_shape, attack_point, hit_area, threshold=0.025):
     ''' 
     Check if a person hit the pointing area 
     attack_point: (x, y)
@@ -397,16 +401,16 @@ def is_hit(attack_point, hit_area, threshold=0.5):
     '''
     if len(hit_area) != 4:
         return False
-    if is_in_area(attack_point, hit_area, threshold):
+    if is_in_area(img_shape, attack_point, hit_area, threshold):
         return True
     return False    
 
 
-def is_hit_pt(attack_point, hit_point, threshold=0.5):
-    return np.linalg.norm(attack_point - hit_point) < threshold
+def is_hit_pt(img_shape, attack_point, hit_point, threshold=0.025):
+    return np.linalg.norm(attack_point - hit_point) < threshold*min(img_shape)
 
 
-def check_pointing_area(img_w, img_h, humans, dict_id2skeleton):
+def check_pointing_area(log_path, img_w, img_h, humans, dict_id2skeleton):
     ''' 
     Check if a person hit the pointing area 
     
@@ -414,36 +418,48 @@ def check_pointing_area(img_w, img_h, humans, dict_id2skeleton):
     pt_list = []
     ret_list = []
     atk_name = ['r_wrist', 'l_wrist', 'r_andke', 'l_andke']
+    img_shape = (img_h, img_w)
     for human_id, human in enumerate(humans):
-        r_wrist = human.get_part_point(common.CocoPart.RWrist)
-        l_wrist = human.get_part_point(common.CocoPart.LWrist)
-        r_andke = human.get_part_point(common.CocoPart.RAnkle)
-        l_andke = human.get_part_point(common.CocoPart.LAnkle)
+        r_wrist = human.get_part_point(img_shape, common.CocoPart.RWrist.value)
+        l_wrist = human.get_part_point(img_shape, common.CocoPart.LWrist.value)
+        r_andke = human.get_part_point(img_shape, common.CocoPart.RAnkle.value)
+        l_andke = human.get_part_point(img_shape, common.CocoPart.LAnkle.value)
+        r_wrist = np.asarray(r_wrist) if r_wrist is not None else None
+        l_wrist = np.asarray(l_wrist) if l_wrist is not None else None
+        r_andke = np.asarray(r_andke) if r_andke is not None else None
+        l_andke = np.asarray(l_andke) if l_andke is not None else None
+        # print(f'{r_wrist=}\n{l_wrist=}\n{r_andke=}\n{l_andke=}')
+        # print(f'{img_shape=}')
         atk_pt = [r_wrist, l_wrist, r_andke, l_andke]
         hit_area = []
         for h_id, h in enumerate(humans):
-            if h == human:
+            if h_id == human_id:
                 continue
             hit_area.append([h_id, h.get_face_box_new(img_w, img_h), 
                              h.get_body_box_new(img_w, img_h)])
-
+        append_log_and_print(log_path, f'{atk_pt=}\n{hit_area=}')
         for i, pt in enumerate(atk_pt):
             if pt is None:
                 continue
             for j, area in enumerate(hit_area):
-                if is_hit(pt, area[1]):
+                if area[1] is not None and is_hit(img_shape, pt, area[1]):
                     pt_list.append((human_id, atk_name[i], 'head'))
-                if is_hit(pt, area[2]):
+                if area[2] is not None and is_hit(img_shape, pt, area[2]):
                     pt_list.append((human_id, atk_name[i], 'body'))
 
         if atk_pt[0] is not None and atk_pt[1] is not None:
-            ret_list.append([human_id, is_hit_pt(atk_pt[0], atk_pt[1])])
-    return pt_list
+            # ret_list.append([human_id, is_hit_pt(atk_pt[0], atk_pt[1])])
+            ret_list.append(np.linalg.norm(atk_pt[0] - atk_pt[1]))
+            print(f'{np.linalg.norm(atk_pt[0] - atk_pt[1])=}\n{0.025*min(img_shape)}')
+    return pt_list, ret_list
+    # return pt_list
 
-
-from Streamers.SharedData import SH_FRAME
-
-def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH, output_folder=args.output_folder, img_displayer_on=False):
+from PublicFunctions import timeTag
+def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH,
+                 output_folder=args.output_folder, SD=None, ID=-1, img_displayer_on=False):
+    timeTag("s5_test_main")
+    if SD is None or ID < 0:
+        raise Exception("Identify SharedData and ID")
     start = time.time()
 
     # img_displayer_on = True
@@ -485,22 +501,27 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
     DST_VIDEO_FPS = 30
     video_writer = lib_images_io.VideoWriter(
         dst_folder + DST_VIDEO_NAME, DST_VIDEO_FPS)  # video_writer = lib_images_io.VideoWriter(DST_FOLDER + DST_VIDEO_NAME, DST_VIDEO_FPS)
-
+    timeTag("[Complete]")
     # -- Read images and process
     try:
         ith_img = -1 + 1
         while images_loader.has_image():
+            timeTag("deal-image")
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                images_loader.stop()
+                append_log_and_print(log_path, '🔴 Stop by pressing q')
+                break
 
             # -- Read image
             img = images_loader.read_image()
-            # TODO: put img into shared space
-            # like: SH_FRAME[id] = img
-            #   or: cv2.imwrite('file_path', img)
             if img is None and data_type != 'webcam':
                 append_log_and_print(log_path, f"🔴 Error: {img} is None")
                 break
             if img_displayer_on and cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+        # store streaming frame here
+            SD.setStreamFrame(ID, img)
 
             ith_img += 1
             img_disp = img.copy()
@@ -529,12 +550,14 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
 
             # -- Check if a person hit the pointing area
             # (contestant_id, action, hit_area)
-            pt_list = check_pointing_area(
-                img.shape[1], img.shape[0], humans, dict_id2skeleton)
+            pt_list, debug_list = check_pointing_area(
+                log_path, img_disp.shape[1], img_disp.shape[0], humans, dict_id2skeleton)
             if len(pt_list):
                 append_log_and_print(log_path, f'\n🟢 {pt_list=}\n')
             else:
                 append_log_and_print(log_path, f'\n🟡 {pt_list=} No one hit the pointing area\n')
+            if len(debug_list):
+                append_log_and_print(log_path, f'\n🟢 {debug_list[-1]=}\n')
 
             # Print label of a person
             if len(dict_id2skeleton):
@@ -560,6 +583,9 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
             else:
                 video_writer.write(img_disp)
 
+        # store result frame here
+            SD.addResultFrame(ID, img_disp)
+
             # -- Get skeleton data and save to file
             skels_to_save = get_the_skeleton_data_to_save_to_disk(
                 dict_id2skeleton, dict_id2label)
@@ -568,6 +594,7 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
                 SKELETON_FILENAME_FORMAT.format(ith_img),
                 skels_to_save)  # lib_commons.save_listlist(DST_FOLDER + DST_SKELETON_FOLDER_NAME + SKELETON_FILENAME_FORMAT.format(ith_img), skels_to_save)
         # end while
+        append_log_and_print(log_path, '\nend while loop\n')
     finally:
         video_writer.stop()
         # analyze_log(log_path)
@@ -585,12 +612,20 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
             for label, count in plabel_cnt.items():
                 append_log_and_print(
                     log_path, f'{label}: {count/(ith_img+1)*100:.2f}%')
+    append_log_and_print(log_path, 's5_test_main() ends')
 
-
+args = (
+    'Realtime-Action-Recognition-master/model/trained_classifier.pickle',
+    'webcam',
+    0,
+    'output/webcam',
+    True
+)
 # -- Main
 if __name__ == "__main__":
-    s5_test_main(SRC_MODEL_PATH, SRC_DATA_TYPE, SRC_DATA_PATH,
-                 args.output_folder, img_displayer_on=False)
+    s5_test_main(*args)
+    # s5_test_main(SRC_MODEL_PATH, SRC_DATA_TYPE, SRC_DATA_PATH,
+    #              args.output_folder, img_displayer_on=True)
 
 
 r'''
@@ -633,13 +668,13 @@ r'''
 python src/s5_test.py `
     --model_path model/trained_classifier.pickle `
     --data_type video `
-    --data_path ..\..\Taekwondo_media\video\video-11m14s-31-x3htXTI7nDI.mp4 `
+    --data_path ..\..\Taekwondo_media\video\video-14m35s-6-x3htXTI7nDI.mp4 `
     --output_folder output
 '''
 r'''
 python src/s5_test.py `
     --model_path model/trained_classifier.pickle `
     --data_type webcam `
-    --data_path 'https://192.168.0.12:8080/video' `
+    --data_path 'https://140.115.142.55:8080/video' `
     --output_folder output/webcam
 '''

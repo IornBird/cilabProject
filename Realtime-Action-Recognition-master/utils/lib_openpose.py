@@ -145,10 +145,11 @@ class SkeletonDetector(object):
 
         if draw_pta:
             # Draw person tracking area
-            for human in humans:
+            for human in humans:                
                 # human: Human (src/githubs/tf-pose-estimation/tf_pose/estimator.py)
-                body_box_new = human.get_body_box_new(img_w, img_h)
                 face_box_new = human.get_face_box_new(img_w, img_h)
+                body_box_new = human.get_body_box_new(img_w, img_h)
+
 
                 # Draw face box
                 if face_box_new is not None:
@@ -161,15 +162,15 @@ class SkeletonDetector(object):
                     cv2.rectangle(
                         img_disp,
                         body_box_new[0], body_box_new[3],
-                        (255, 0, 0), 2)
-                # Draw hand box
+                        (0, 255, 0), 2)
+                # # Draw hand box
                 # r_wrist_pt = human.get_part_point(common.CocoPart.RWrist)
                 # l_wrist_pt = human.get_part_point(common.CocoPart.LWrist)
                 # if r_wrist_pt is not None:
                 #     cv2.circle(img_disp, (int(r_wrist_pt[0]), int(r_wrist_pt[1])), 10, (0, 0, 255), -1)
                 # if l_wrist_pt is not None:
                 #     cv2.circle(img_disp, (int(l_wrist_pt[0]), int(l_wrist_pt[1])), 10, (0, 0, 255), -1)
-                # Draw foot box
+                # # Draw foot box
                 # r_andke_pt = human.get_part_point(common.CocoPart.RAnkle)
                 # l_andke_pt = human.get_part_point(common.CocoPart.LAnkle)
                 # if r_andke_pt is not None:
