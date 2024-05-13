@@ -47,10 +47,12 @@ class StreamStore2:
                 'webcam',
                 self.streamSrc,
                 'output/webcam',
+                self.SD,
                 self.id
             )
             self.recording_process = multiprocessing.Process(target=s5_test_main, args=args)
             self.recording_process.start()
+
     def read(self):
         frame = self.SD.getStreamFrame(self.id)
         success = frame is not None

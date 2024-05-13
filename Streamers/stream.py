@@ -1,6 +1,9 @@
+import multiprocessing
+
 from PublicFunctions import *
 from Streamers.StreamPlayer import *
-from Streamers.StreamStore import StreamStore
+from Streamers.StreamStore import *
+from Streamers.SharedData import *
 
 
 # this class has not used yet
@@ -25,26 +28,37 @@ class CapFrame(wx.Frame):
     def OnPaint(self, evt):
         dc = wx.BufferedPaintDC(self)
         dc.DrawBitmap(self.bmp, 0, 0)
-        
+
+
+from Streamers.SharedData import *
+SD = None
+
 
 class ShowCapture(wx.Panel):
     def __init__(self, parent, streams: list[str], playbacks: list[str], fps=60):
         super().__init__(parent)
         self.SetBackgroundColour(wx.BLACK)
 
+        SD = SharedData(multiprocessing.Manager(), 640, 480)
+
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
-        videos = [cv2.VideoCapture(c) for c in playbacks]
-        # captures = [cv2.VideoCapture(b) for b in (0, 1)]
-        captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
+
+        # captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
+        # videos = [cv2.VideoCapture(c) for c in playbacks]
+        #
+        # captures = [cv2.VideoCapture(b) for b in (0,)]
+
+        captures = [StreamStore2(b, SD) for b in (0,)]
+        videos = [VideoReader(SD, i) for i in range(len(captures))]
 
         # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
 
         for c in captures:
             c.Play()
-        #     c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-        #     c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-        #     c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+            # c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+            # c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+            # c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
         for c in videos:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -61,7 +75,7 @@ class ShowCapture(wx.Panel):
         self.bmp = None
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        time.sleep(5)
+        time.sleep(10)
         self.SetBitmap()
         # self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # if self.SetBitmap():

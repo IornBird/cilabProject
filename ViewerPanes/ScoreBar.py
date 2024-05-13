@@ -71,8 +71,8 @@ class ScoreBar(wx.Panel):
                format is ([name1, record1], [name2, record2])
         """
         self.record = records
-        self.BlueScore.SetName(records[0][0])
-        self.RedScore.SetName(records[1][0])
+        # self.BlueScore.SetName(records[0][0])
+        # self.RedScore.SetName(records[1][0])
 
     def setPlayingTime(self, time: int):
         """

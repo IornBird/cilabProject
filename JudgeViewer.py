@@ -226,6 +226,8 @@ class JudgeViewer(wx.Panel):
         self.TechRecord[0][1].clear()
         self.TechRecord[1][1].clear()
 
+        self.setTechRecord()
+
 
     def needReload(self):
         length = self.videoPane.getVideoLength()
