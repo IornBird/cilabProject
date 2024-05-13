@@ -364,7 +364,7 @@ def init_log(log_path):
 
 def append_log_and_print(log_path, text):
     ''' Append text to log file '''
-    with open(log_path, "a") as f:
+    with open(log_path, "a", encoding="utf_8_sig") as f:
         f.write(text + "\n")
     print(text)
 
@@ -441,6 +441,8 @@ def check_pointing_area(img_w, img_h, humans, dict_id2skeleton):
     return pt_list
 
 
+from Streamers.SharedData import SH_FRAME
+
 def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH, output_folder=args.output_folder, img_displayer_on=False):
     start = time.time()
 
@@ -491,6 +493,9 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
 
             # -- Read image
             img = images_loader.read_image()
+            # TODO: put img into shared space
+            # like: SH_FRAME[id] = img
+            #   or: cv2.imwrite('file_path', img)
             if img is None and data_type != 'webcam':
                 append_log_and_print(log_path, f"🔴 Error: {img} is None")
                 break

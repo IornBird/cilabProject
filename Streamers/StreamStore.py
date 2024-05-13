@@ -5,9 +5,31 @@ import time
 from TimeManager import TimeManager
 from PublicFunctions import timeTag
 
+# import os
+# import sys
+# OPENPOSE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/../Realtime-Action-Recognition-master/src"
+# sys.path.append(OPENPOSE_PATH)
+# from s5_test import s5_test_main
 
+# E:\專題\JudgeWatcer\Realtime-Action-Recognition-master\src\s5_test.py
+
+'''
+s5_test_main(model_path, data_type, data_path, output_folder, img_displayer_on)
+
+args are all str, img_displayer_on is bool, True iff show frame in other window
+
+--model_path Realtime-Action-Recognition-master/model/trained_classifier.pickle
+--data_type webcam
+--data_path 'https://192.168.0.12:8080/video' `
+--output_folder output/webcam
+
+--model_path model/trained_classifier.pickle
+--data_type video
+--data_path ..../Taekwondo_media/video/video-11m14s-31-x3htXTI7nDI.mp4 
+--output_folder output 
+'''
 class StreamStore:
-    def __init__(self, streamSource: str| int, file: str, fps=60):
+    def __init__(self, streamSource: str| int, file: str, fps=60, id=0):
         manager = multiprocessing.Manager()
 
         self.streamSrc = streamSource
@@ -24,6 +46,7 @@ class StreamStore:
         self.timer = manager.list()
 
         self.setSharedVars()
+        self.id = id
 
     def setSharedVars(self):
         self.shared_Frame.append(None)
@@ -89,6 +112,7 @@ class StreamStore:
         """
         timeTag("Play")
         if self.recording_process is None or not self.recording_process.is_alive():
+            # self.recording_process = multiprocessing.Process(s5_test_main, args=...)
             self.recording_process = multiprocessing.Process(target=self.record_frames)
             self.doRecord[0] = True
             self.doProcess[0] = True
@@ -149,6 +173,8 @@ def record():
 def canRead():
     cap = cv2.VideoCapture(FILE)
     ret, frame = cap.read()
+    time.sleep(1)
+    ret, frame = cap.read()
     cap.release()
     return ret
 
@@ -169,7 +195,8 @@ if __name__ == '__main__':
         print("record")
         ss.Play()
         time.sleep(5)
-        print(f"getting frame when recording: {ss.read()[0]}")
+        # print(f"getting frame when recording: {ss.read()[0]}")
+        print(f"read video during writing: {canRead()}")
         ss.Pause()
         time.sleep(6)
         ss.Play()

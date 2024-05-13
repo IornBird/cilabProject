@@ -9,9 +9,9 @@ pandas
 argparse
 IPython[all]
 simplejson
-sklearn
+scikit-learn
 slidingwindow
 pyyaml
 
-tensorflow==1.15
-tensorflow-gpu==1.15
+# tensorflow==1.15
+# tensorflow-gpu==1.15

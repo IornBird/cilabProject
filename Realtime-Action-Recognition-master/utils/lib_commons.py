@@ -6,6 +6,11 @@ import math
 import time
 import os
 import glob
+
+import os
+import sys
+OPENPOSE_PATH = 'e:/專題/judgewatcer/.venv/lib/site-packages'
+sys.path.append(OPENPOSE_PATH)
 import yaml
 import datetime
 from os import listdir
