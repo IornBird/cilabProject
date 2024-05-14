@@ -121,7 +121,7 @@ def get_command_line_arguments():
 def get_dst_folder_name(src_data_type, src_data_path):
     ''' Compute a output folder name based on data_type and data_path.
         The final output of this script looks like this:
-            DST_FOLDER/folder_name/vidoe.avi
+            DST_FOLDER/folder_name/video.avi
             DST_FOLDER/folder_name/skeletons/XXXXX.txt
     '''
 
@@ -168,7 +168,7 @@ DST_VIDEO_NAME = DST_FOLDER_NAME + ".avi"
 DST_VIDEO_FPS = float(cfg["output"]["video_fps"])
 
 
-# Video setttings
+# Video settings
 
 # If data_type is webcam, set the max frame rate.
 SRC_WEBCAM_MAX_FPS = float(cfg["settings"]["source"]
@@ -417,20 +417,20 @@ def check_pointing_area(log_path, img_w, img_h, humans, dict_id2skeleton):
     '''
     pt_list = []
     ret_list = []
-    atk_name = ['r_wrist', 'l_wrist', 'r_andke', 'l_andke']
+    atk_name = ['r_wrist', 'l_wrist', 'r_ankle', 'l_ankle']
     img_shape = (img_h, img_w)
     for human_id, human in enumerate(humans):
         r_wrist = human.get_part_point(img_shape, common.CocoPart.RWrist.value)
         l_wrist = human.get_part_point(img_shape, common.CocoPart.LWrist.value)
-        r_andke = human.get_part_point(img_shape, common.CocoPart.RAnkle.value)
-        l_andke = human.get_part_point(img_shape, common.CocoPart.LAnkle.value)
+        r_ankle = human.get_part_point(img_shape, common.CocoPart.RAnkle.value)
+        l_ankle = human.get_part_point(img_shape, common.CocoPart.LAnkle.value)
         r_wrist = np.asarray(r_wrist) if r_wrist is not None else None
         l_wrist = np.asarray(l_wrist) if l_wrist is not None else None
-        r_andke = np.asarray(r_andke) if r_andke is not None else None
-        l_andke = np.asarray(l_andke) if l_andke is not None else None
-        # print(f'{r_wrist=}\n{l_wrist=}\n{r_andke=}\n{l_andke=}')
+        r_ankle = np.asarray(r_ankle) if r_ankle is not None else None
+        l_ankle = np.asarray(l_ankle) if l_ankle is not None else None
+        # print(f'{r_wrist=}\n{l_wrist=}\n{r_ankle=}\n{l_ankle=}')
         # print(f'{img_shape=}')
-        atk_pt = [r_wrist, l_wrist, r_andke, l_andke]
+        atk_pt = [r_wrist, l_wrist, r_ankle, l_ankle]
         hit_area = []
         for h_id, h in enumerate(humans):
             if h_id == human_id:
