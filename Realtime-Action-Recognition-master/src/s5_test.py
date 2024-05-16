@@ -13,6 +13,7 @@ Output:
     result skeleton: output/${video_name}/skeleton_res/XXXXX.txt
     visualization by cv2.imshow() in img_displayer
 '''
+
 import wx
 
 '''
@@ -121,6 +122,7 @@ def get_command_line_arguments():
 
 def get_dst_folder_name(src_data_type, src_data_path):
     ''' Compute an output folder name based on data_type and data_path.
+
         The final output of this script looks like this:
             DST_FOLDER/folder_name/video.avi
             DST_FOLDER/folder_name/skeletons/XXXXX.txt
@@ -169,7 +171,8 @@ DST_VIDEO_NAME = DST_FOLDER_NAME + ".avi"
 DST_VIDEO_FPS = float(cfg["output"]["video_fps"])
 
 
-# Video setttings
+
+# Video settings
 
 # If data_type is webcam, set the max frame rate.
 SRC_WEBCAM_MAX_FPS = float(cfg["settings"]["source"]
@@ -458,6 +461,7 @@ def check_pointing_area(log_path, img_w, img_h, humans, dict_id2skeleton):
 from PublicFunctions import timeTag
 from Streamers.SharedData import *
 import wx
+
 def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH,
                  output_folder=args.output_folder, SD=None, ID=-1, img_displayer_on=False):
     timeTag("s5_test_main")
@@ -515,6 +519,7 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
         while images_loader.has_image():
             timeTag("deal-image")
             if (cv2.waitKey(1) & 0xFF == ord('q')) or SD.STOP[0]:
+
                 images_loader.stop()
                 append_log_and_print(log_path, '🔴 Stop by pressing q')
                 break

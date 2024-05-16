@@ -80,6 +80,7 @@ class StreamPlayer:
         # while not ret:
         ret, frame = cap.read()
         # assert ret
+
         timeTag("[return]")
         return frame
 
@@ -116,3 +117,4 @@ class StreamPlayer:
     def Destroy(self):
         for c in self.cameras:
             c.Stop()
+

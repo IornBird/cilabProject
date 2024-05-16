@@ -3,6 +3,7 @@ import wx
 from PublicFunctions import *
 
 import wx.media
+from Streamers.StreamStore import StreamStore
 
 # class
 # wx.DEFINE_EVENT(My_EVENT, wx.CommandEvent)

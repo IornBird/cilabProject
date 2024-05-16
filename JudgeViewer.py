@@ -31,7 +31,6 @@ import SQL.mysql_api as sql
 #         )
 # judgeScores = ([0, 0], [0, 0])
 
-
 """
 custom event
 myEVT_CUSTOM = wx.NewEventType()

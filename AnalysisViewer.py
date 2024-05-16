@@ -145,6 +145,7 @@ class AnalysisViewer(wx.Panel):
         else:
             photo = "Images\\UnknownPerson.png"
         self.importOneData(nation, baseData[0], anaResult[0])
+
         self.contestantPhoto.LoadFile(photo)
         self.photoPane.Refresh()
 
