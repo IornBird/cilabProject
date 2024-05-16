@@ -9,7 +9,7 @@ import wx
 
 from TechRecord import *
 
-IPs = ['192.168.100.127', '192.168.100.108']
+IPs = [0] #['192.168.100.127', '192.168.100.108']
 playbacks = [
             #"C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
             #"E:\\專題\\test.mp4",

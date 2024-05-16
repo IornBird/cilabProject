@@ -11,7 +11,7 @@ import os
 import sys
 OPENPOSE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/../Realtime-Action-Recognition-master/src"
 sys.path.append(OPENPOSE_PATH)
-from s5_test import s5_test_main
+# from s5_test import s5_test_main
 
 # E:\專題\JudgeWatcer\Realtime-Action-Recognition-master\src\s5_test.py
 
