@@ -36,9 +36,11 @@ class MainFrame(wx.Frame):
 
         menuBar = wx.MenuBar()
         fileMenu = wx.Menu()
-        doStream = fileMenu.Append(wx.ID_ANY, _("Pause / Resume stream\tP"))
+        mptCnst = fileMenu.Append(wx.ID_ANY, _("Import Contestants And Reset\tCtrl-N"))
+        doStream = fileMenu.Append(wx.ID_ANY, _("Pause / Resume stream\tCtrl-P"))
         dbSetScore = fileMenu.Append(wx.ID_ANY, _("Flush Score And Reset\tCtrl-F"))
 
+        self.Bind(wx.EVT_MENU, self.judge.OnImport, None, mptCnst.GetId())
         self.Bind(wx.EVT_MENU, self.judge.OnKeyEvent, None, doStream.GetId())
         self.Bind(wx.EVT_MENU, self.judge.OnFlush, None, dbSetScore.GetId())
         menuBar.Append(fileMenu, _("&File"))

@@ -9,10 +9,14 @@ import wx.grid
 
 import SQL.mysql_api as sql
 
+from PublicFunctions import *
+
 class AnalysisViewer(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
+
+        self.SetFont(wx.Font(wx.FontInfo(14)))
 
         baseSizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -69,9 +73,11 @@ class AnalysisViewer(wx.Panel):
         self.baseDataPane = wx.Panel(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL)
         bDataSizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.contestantPhoto = wx.StaticBitmap(self.baseDataPane, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition,
-                                               wx.DefaultSize, 0)
-        bDataSizer.Add(self.contestantPhoto, 1, wx.ALL | wx.EXPAND, 5)
+        # self.contestantPhoto = wx.StaticBitmap(self.baseDataPane, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition,
+        #                                        wx.DefaultSize, 0)
+        self.contestantPhoto = wx.Bitmap("Images\\UnknownPerson.png", wx.BITMAP_TYPE_PNG)
+        self.photoPane = wx.Panel(self.baseDataPane)
+        bDataSizer.Add(self.photoPane, 1, wx.ALL | wx.EXPAND, 5)
 
         self.basicChat = wx.grid.Grid(self.baseDataPane, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
 
@@ -113,6 +119,7 @@ class AnalysisViewer(wx.Panel):
 
         # Connect Events
         self.contestantChoice.Bind(wx.EVT_CHOICE, self.OnChoiceName)
+        self.photoPane.Bind(wx.EVT_PAINT, self.OnPaint)
 
     def Destroy(self):
         super().Destroy()
@@ -127,11 +134,19 @@ class AnalysisViewer(wx.Panel):
     # Virtual event handlers, override them in your derived class
     def OnChoiceName(self, event):
         name = self.contestantChoice.GetStringSelection()
-        id = sql.select_db('contestant', 'id', f"name='{name}'")[0][0]
+        data = sql.select_db('contestant', '`id`, `nationality`', f"name='{name}'")[0]
+        id = data[0]
+        nation = data[1]
         baseData = sql.select_db('body_stats', '*', f"contestant_id={id}")
         anaResult = sql.select_db('comp_stats', '*', f"contestant_id={id}")
-        self.importOneData(name, baseData[0], anaResult[0])
-
+        photo = sql.select_db('picture', 'picture_path', f"contestant_id={id}")
+        if photo:
+            photo = photo[0][0]
+        else:
+            photo = "Images\\UnknownPerson.png"
+        self.importOneData(nation, baseData[0], anaResult[0])
+        self.contestantPhoto.LoadFile(photo)
+        self.photoPane.Refresh()
 
     # private functions
     def getData(self):
@@ -139,13 +154,14 @@ class AnalysisViewer(wx.Panel):
         # importData()
         # get_contestant_status()
 
-    def importOneData(self, name: str, baseData, analysisResult):
+    def importOneData(self, nation: str, baseData, analysisResult):
         """
         :param name: name of ONE contestant
         :param baseData:
         :param analysisResult:
         """
-        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight'])
+        baseData = [*baseData, nation]
+        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight', 'nationality'])
         self.changeTable(self.resultChat, analysisResult, [
             'ID',
             'contest_num',
@@ -197,3 +213,14 @@ class AnalysisViewer(wx.Panel):
             table.SetCellValue(i, 0, str(value))
         for i, item in enumerate(items):
             table.SetRowLabelValue(i, item)
+
+    def OnPaint(self, evt):
+        dc = wx.BufferedPaintDC(self.photoPane)
+        dc.Clear()
+        gc = wx.GraphicsContext.Create(dc)
+        wSize = self.photoPane.GetSize()
+        bmpSize = self.contestantPhoto.GetSize()
+        # bmpSize = self.bmp.GetScaledSize()
+        corner, ratio = putRectangle(*bmpSize, wSize, 1)
+        bmpSize = toInts([bmpSize.x * ratio, bmpSize.y * ratio])
+        gc.DrawBitmap(self.contestantPhoto, *corner, *bmpSize)

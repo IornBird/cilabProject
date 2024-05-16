@@ -64,7 +64,7 @@ def putRectangle(rx: float, ry: float, rect: list[float], ratio=0.9):
     return corner, times
 
 
-def toInts(nums: list[float]):
+def toInts(nums: list[float] | tuple):
     return [round(c) for c in nums]
 
 

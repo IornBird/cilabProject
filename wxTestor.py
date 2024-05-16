@@ -4,6 +4,9 @@ from PublicFunctions import *
 
 import wx.media
 
+# class
+# wx.DEFINE_EVENT(My_EVENT, wx.CommandEvent)
+
 class theFrame(wx.Frame):
     def __init__(self, title: str, size):
         super().__init__(parent=None, id=wx.ID_ANY, title=title, size=size)
@@ -37,25 +40,30 @@ class APane(wx.Panel):
         self.SetFont(wx.Font(wx.FontInfo(32).FaceName("Times New Roman")))
         self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.bmp = None
 
     def OnPaint(self, evt):
         dc = wx.AutoBufferedPaintDC(self)
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         assert isinstance(gc, wx.GraphicsContext)
-        tf = wx.AffineMatrix2D()
-        gc.SetFont(self.GetFont(), wx.BLACK)
-        size = self.GetTextExtent("Hello world")
-
-        c, times = putRectangle(*size, self.GetSize())
-        tf.Translate(*c)
-        tf.Scale(times, times)
-        gc.SetTransform(gc.CreateMatrix(tf))
-
-        gc.DrawText("Hello world", 0, 0)
+        # tf = wx.AffineMatrix2D()
+        # gc.SetFont(self.GetFont(), wx.BLACK)
+        # size = self.GetTextExtent("Hello world")
+        #
+        # c, times = putRectangle(*size, self.GetSize())
+        # tf.Translate(*c)
+        # tf.Scale(times, times)
+        # gc.SetTransform(gc.CreateMatrix(tf))
+        #
+        # gc.DrawText("Hello world", 0, 0)
 
 
 if __name__ == '__main__':
+
+    f = open('.env', 'rt')
+    print(f.read())
+
     app = wx.App()
     frame = theFrame("Title", (1024, 576))
     frame.Show()

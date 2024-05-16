@@ -11,6 +11,13 @@ class TechRecord:
         self.setValue(tech, toward)
         self.invalid = False
 
+    @staticmethod
+    def create(time, tech_5s, toward_5s):
+        return TechRecord(time,
+                    Tech.FindFrom5s[tech_5s[1:]],
+                    Tech.FindFrom5s[toward_5s]
+               )
+
     def setValue(self, tech, toward):
         """
         :return: change of [score, violate], used for total score change
@@ -34,6 +41,10 @@ class TechRecord:
         self.invalid = not self.invalid
         neg = -1 if self.invalid else 1
         return [neg * self.score, neg * (self.tech == Tech.VIOLATE)]
+
+    def __eq__(self, other):
+        teq = (self.tech == other.tech)
+        return teq and (self.toward == self.toward or self.tech == Tech.VIOLATE)
 
     def __gt__(self, other):
         return self.time > other.time
@@ -69,6 +80,14 @@ class Tech:
     FindTowardRev = {
         TRUNK: 0,
         HEAD: 1
+    }
+
+    FindFrom5s = {
+        'wrist': PUNCH,
+        'ankle': KICK,
+
+        'head': HEAD,
+        'body': TRUNK
     }
 
 

@@ -31,6 +31,8 @@ def init_db():
         cur = db.cursor()
         # TABLE contestant
         cur.execute('CREATE TABLE IF NOT EXISTS contestant (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), nationality VARCHAR(255))')
+        # TABLE picture
+        cur.execute('CREATE TABLE IF NOT EXISTS picture (contestant_id INT AUTO_INCREMENT PRIMARY KEY, picture_path TEXT)')
         # TABLE comp_stats
         cur.execute('CREATE TABLE IF NOT EXISTS comp_stats(contestant_id INT, contest_num INT, contest_tot_secs INT, \
                     wins INT, win_rounds INT, lose_rounds INT, \
@@ -49,8 +51,7 @@ def init_db():
         # TABLE competition
         cur.execute('CREATE TABLE IF NOT EXISTS competition (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), date DATE, location VARCHAR(255), log LONGTEXT, \
                     red_contestant_id INT, blue_contestant_id INT, winner_id INT, \
-                    red_points INT, blue_points INT, \
-                    red_contestant_id INT, blue_contestant_id INT, winner_id INT)')
+                    red_points INT, blue_points INT)')
         db.commit()
     # db.close()
     print('Database initialized.')
@@ -63,6 +64,7 @@ def insert_db(table_name, values):
     Insert into TABLE Values (val1, val2, val3, ...)
     '''
     command = f"Insert into {table_name} Values {values}"
+    print(f'try execute {command=}.')
     db = MySQLdb.connect(*mysql_args)
     with db:
         cur = db.cursor()
@@ -86,7 +88,7 @@ def update_db(table_name, set_clause, where_clause):
         db.commit()
     print(f'{command=} executed.')
     
-def select_db(table_name, select_clause, where_clause):
+def select_db(table_name, select_clause, where_clause='1'):
     '''
     table_name:    str, name of table to be searched
     select_clause: str, column of result that returned

@@ -7,36 +7,44 @@ class ScorePane(wx.Panel):
     A panel that shows score and times of violating rules of a contestant
     """
     def __init__(self, parent, isBlue, scores):
-        super().__init__(parent)
+        super().__init__(parent, style=wx.FULL_REPAINT_ON_RESIZE)
         self.SetFont(wx.Font(36, wx.FONTFAMILY_ROMAN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.color = wx.BLUE if isBlue else wx.RED
         self.scores = scores
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.numberBoard = wx.Panel(self, style=wx.FULL_REPAINT_ON_RESIZE)
+        self.numberBoard = wx.Panel(self, style=wx.TRANSPARENT_WINDOW)
         if True:
             self.numberBoard.SetBackgroundStyle(wx.BG_STYLE_PAINT)
             self.numberBoard.SetBackgroundColour(wx.Colour(192, 192, 192))
-            self.numberBoard.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.namePane = wx.Panel(self)
-        nameSizer = wx.BoxSizer()
-        if True:
-            self.nameLabel = wx.StaticText(self.namePane, label="Name")
-            nameSizer.Add(self.nameLabel, 0, wx.CENTER)
+        self.nameLabel = "Name"
+        self.namePane = wx.Panel(self, size=self.GetTextExtent("Name"), style=wx.TRANSPARENT_WINDOW)
+        # nameSizer = wx.BoxSizer()
+        # if True:
+        #     self.nameLabel = wx.StaticText(self.namePane, label="Name")
+        #     nameSizer.Add(self.nameLabel, 1, wx.EXPAND | wx.CENTER)
         sizer.Add(self.numberBoard, 2, wx.EXPAND | wx.ALL)
-        sizer.Add(self.namePane, 3, wx.LEFT | wx.RIGHT)
+        sizer.Add(self.namePane, 3, wx.EXPAND | wx.LEFT | wx.RIGHT)
         self.SetSizerAndFit(sizer)
         self.SetBackgroundColour(wx.Colour(192, 192, 192))
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+
+        self.needRefersh = False
 
 
     # Interfaces
-    def setName(self, contestant: str):
+    def refreshName(self, contestant: str):
         """
         :param contestant: name of contestant
+        if containing last name, only first letter of which will be shown
         """
-        self.nameLabel.SetLabelText(contestant)
+        name = contestant.split(' ')
+        self.nameLabel = name[0]
+        if len(name) > 1:
+            self.nameLabel += f" {name[-1][0]}."
+        self.Refresh()
 
     def getName(self):
-        return self.nameLabel.GetLabelText()
+        return self.nameLabel
 
     def setScore(self, score: int, violate: int):
         """
@@ -45,16 +53,38 @@ class ScorePane(wx.Panel):
         """
         self.scores[0] = score
         self.scores[1] = violate
+        self.Refresh()
 
     # Private Functions
-    def setTextSize(self):
+    def setTextSize(self, gc: wx.GraphicsContext):
         size = self.namePane.GetSize()
-        detectFont(size, self.nameLabel, self.getName(), ratio=0.8)
-        self.namePane.SetFont(self.nameLabel.GetFont())
+        tf = wx.AffineMatrix2D()
+        # gct = wx.GraphicsContext.Create(dc)
+        gc.SetFont(self.GetFont(), wx.BLACK)
+        tSize = self.GetTextExtent(self.nameLabel)
+
+        t_size_copy = [*tSize]
+        corner_copy = [0, 0]
+
+        c, times = putRectangle(tSize[0], tSize[1], size, 0.8)
+        tf.Translate(c[0] + self.numberBoard.GetSize()[0], c[1])
+        tf.Scale(times, times)
+        gc.SetTransform(gc.CreateMatrix(tf))
+
+        t_size_copy = tf.TransformPoint(t_size_copy)
+        corner_copy = tf.TransformPoint(corner_copy)
+
+        print("from: ", *corner_copy)
+        print("to:   ", *t_size_copy)
+
+        gc.DrawText(self.nameLabel, 0, 0)
+        del tf
+        # detectFont(size, self.nameLabel, self.getName(), ratio=0.8)
+        # self.namePane.SetFont(self.nameLabel.GetFont())
+        # gct.Destroy()
 
     def OnPaint(self, evt):
-        self.setTextSize()
-        dc = wx.PaintDC(self.numberBoard)
+        dc = wx.PaintDC(self)
         dc.Clear()
         gc = wx.GraphicsContext.Create(dc)
         if gc:
@@ -78,5 +108,13 @@ class ScorePane(wx.Panel):
             cornerN = (cornerN[0] + secConer[0], cornerN[1] + secConer[1])
             gc.SetFont(self.numberBoard.GetFont(), wx.BLACK)
             gc.DrawText(s, *toInts(cornerN))
+            self.setTextSize(gc)
 
         gc.Destroy()
+        self.RefershAgain()
+
+    def RefershAgain(self):
+        if self.needRefersh:
+            self.Refresh()
+            self.Update()
+        self.needRefersh = not self.needRefersh
