@@ -49,12 +49,12 @@ class ShowCapture(wx.Panel):
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
 
         # captures = [StreamStore(b, f"../videos/{b}.avi", fps) for b in (0,)]
-        # videos = [cv2.VideoCapture(c) for c in playbacks]
-        #
-        # captures = [cv2.VideoCapture(b) for b in (0,)]
+        videos = [cv2.VideoCapture(c) for c in playbacks]
 
-        captures = [StreamStore2(b, SD) for b in (1,)]
-        videos = [VideoReader(SD, i) for i in range(len(captures))]
+        captures = [cv2.VideoCapture(b) for b in streams]
+
+        # captures = [StreamStore2(b, SD) for b in (1,)]
+        # videos = [VideoReader(SD, i) for i in range(len(captures))]
 
         # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
 
@@ -173,9 +173,9 @@ class ShowCapture(wx.Panel):
         """
         runs only if this is playing
         """
-        if self.callOnBuilt is not None:
-            self.callOnBuilt()
-            self.callOnBuilt = None
+        # if self.callOnBuilt is not None:
+        #     self.callOnBuilt()
+        #     self.callOnBuilt = None
         self.player.OnWxTimer(self.playing, self.streaming)
         if (self.playing or modified) and not self.drawing:
             self.showFrame()
