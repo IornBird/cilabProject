@@ -14,22 +14,22 @@ from TimeManager import TimeManager
 import SQL.mysql_api as sql
 
 # demo
-IPs = ['192.168.100.127', '192.168.100.108']
-playbacks = [
-            #"C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
-            #"E:\\專題\\test.mp4",
-            "videos/0.avi",
-            "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
-        ]
-
-f = open("./videos/0.avi", 'rb')
-f.close()
-
-techRecord = (
-            ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK), TechRecord(2000, Tech.PUNCH, Tech.HEAD)]],
-            ["Laura", [TechRecord(500, Tech.T_KICK, Tech.HEAD)]]
-        )
-judgeScores = ([0, 0], [0, 0])
+# IPs = ['192.168.100.127', '192.168.100.108']
+# playbacks = [
+#             #"C:\\Users\\User\\Desktop\\source\\桂格超大便當.mp4",
+#             #"E:\\專題\\test.mp4",
+#             "videos/0.avi",
+#             "C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4"
+#         ]
+#
+# f = open("./videos/0.avi", 'rb')
+# f.close()
+#
+# techRecord = (
+#             ["Yume", [TechRecord(0, Tech.KICK, Tech.TRUNK), TechRecord(2000, Tech.PUNCH, Tech.HEAD)]],
+#             ["Laura", [TechRecord(500, Tech.T_KICK, Tech.HEAD)]]
+#         )
+# judgeScores = ([0, 0], [0, 0])
 
 """
 custom event
@@ -48,6 +48,8 @@ class MyEvent(wx.PyCommandEvent):
         return self.myVal
 """
 
+import Streamers.SharedData as SD
+
 FPS = 60
 
 class JudgeViewer(wx.Panel):
@@ -57,8 +59,8 @@ class JudgeViewer(wx.Panel):
 
         self.timePlaying = 0
         self.gamePaused = True  # True iff timer of contest itself is paused
-        self.TechRecord = techRecord  # format is ([blue name, blue record], [red name, red record])
-        self.Scores = judgeScores     # formate is ([blue score, blue violates], [red score, red violates])
+        self.TechRecord = SD.techRecord  # format is ([blue name, blue record], [red name, red record])
+        self.Scores = SD.judgeScores     # formate is ([blue score, blue violates], [red score, red violates])
 
         self.scoreSet = None   # left top  | ScoreSetPane(vtSpliter, None, None)
         self.videoPane = None  # right top | VideoPane(vtSpliter, IPs, self.needReload)
@@ -79,7 +81,7 @@ class JudgeViewer(wx.Panel):
             vtSpliter = wx.SplitterWindow(hrSpliter, style=wx.SP_BORDER | wx.SP_LIVE_UPDATE)
             if True:  # set detail for vtSpliter
                 self.scoreSet = ScoreSetPane(vtSpliter, self.TechRecord, self.Scores)
-                self.videoPane = VideoPane(vtSpliter, IPs, playbacks, FPS)
+                self.videoPane = VideoPane(vtSpliter, SD.IPs, SD.playbacks, FPS)
             vtSpliter.SetSashGravity(0.4)
             vtSpliter.SplitVertically(self.scoreSet, self.videoPane)
             self.timeLine = ScoreBar(hrSpliter, self.TechRecord, self.Scores)

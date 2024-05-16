@@ -76,8 +76,11 @@ class StreamPlayer:
             cap = self.cameras[self.camera_no]
         # self.cameras[self.camera_no]
         cap.set(cv2.CAP_PROP_POS_MSEC, self.timePlaying)
+        # ret = False
+        # while not ret:
         ret, frame = cap.read()
-        assert ret
+        # assert ret
+
         timeTag("[return]")
         return frame
 
@@ -109,3 +112,9 @@ class StreamPlayer:
     def TimeCtrl(self):
         if self.timePlaying > self.realTime:
             self.PlManager.SetTime(self.realTime - self.frameLen)
+
+    # Destructor
+    def Destroy(self):
+        for c in self.cameras:
+            c.Stop()
+

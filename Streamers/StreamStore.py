@@ -72,7 +72,10 @@ class StreamStore2:
 
     def Stop(self):
         if self.recording_process is not None and self.recording_process.is_alive():
-            self.recording_process.terminate()
+            self.SD.STOP[0] = True
+            # self.recording_process.terminate()
+            self.recording_process.join()
+
             self.recording_process.close()
             self.recording_process = None
 
@@ -277,3 +280,4 @@ if __name__ == '__main__':
         print("check if record in another process successes")
         print(canRead())
         print("end")
+

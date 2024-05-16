@@ -5,6 +5,9 @@ from PublicFunctions import *
 import wx.media
 from Streamers.StreamStore import StreamStore
 
+# class
+# wx.DEFINE_EVENT(My_EVENT, wx.CommandEvent)
+
 class theFrame(wx.Frame):
     def __init__(self, title: str, size):
         super().__init__(parent=None, id=wx.ID_ANY, title=title, size=size)

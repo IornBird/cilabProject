@@ -134,7 +134,9 @@ class AnalysisViewer(wx.Panel):
     # Virtual event handlers, override them in your derived class
     def OnChoiceName(self, event):
         name = self.contestantChoice.GetStringSelection()
-        id = sql.select_db('contestant', 'id', f"name='{name}'")[0][0]
+        data = sql.select_db('contestant', '`id`, `nationality`', f"name='{name}'")[0]
+        id = data[0]
+        nation = data[1]
         baseData = sql.select_db('body_stats', '*', f"contestant_id={id}")
         anaResult = sql.select_db('comp_stats', '*', f"contestant_id={id}")
         photo = sql.select_db('picture', 'picture_path', f"contestant_id={id}")
@@ -142,7 +144,8 @@ class AnalysisViewer(wx.Panel):
             photo = photo[0][0]
         else:
             photo = "Images\\UnknownPerson.png"
-        self.importOneData(name, baseData[0], anaResult[0])
+        self.importOneData(nation, baseData[0], anaResult[0])
+
         self.contestantPhoto.LoadFile(photo)
         self.photoPane.Refresh()
 
@@ -152,13 +155,14 @@ class AnalysisViewer(wx.Panel):
         # importData()
         # get_contestant_status()
 
-    def importOneData(self, name: str, baseData, analysisResult):
+    def importOneData(self, nation: str, baseData, analysisResult):
         """
         :param name: name of ONE contestant
         :param baseData:
         :param analysisResult:
         """
-        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight'])
+        baseData = [*baseData, nation]
+        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight', 'nationality'])
         self.changeTable(self.resultChat, analysisResult, [
             'ID',
             'contest_num',

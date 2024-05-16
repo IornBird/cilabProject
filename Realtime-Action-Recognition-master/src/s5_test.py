@@ -14,6 +14,8 @@ Output:
     visualization by cv2.imshow() in img_displayer
 '''
 
+import wx
+
 '''
 Example of usage:
 
@@ -119,7 +121,8 @@ def get_command_line_arguments():
 
 
 def get_dst_folder_name(src_data_type, src_data_path):
-    ''' Compute a output folder name based on data_type and data_path.
+    ''' Compute an output folder name based on data_type and data_path.
+
         The final output of this script looks like this:
             DST_FOLDER/folder_name/video.avi
             DST_FOLDER/folder_name/skeletons/XXXXX.txt
@@ -166,6 +169,7 @@ DST_SKELETON_FOLDER_NAME = cfg["output"]["skeleton_folder_name"]
 DST_VIDEO_NAME = DST_FOLDER_NAME + ".avi"
 # framerate of output video.avi
 DST_VIDEO_FPS = float(cfg["output"]["video_fps"])
+
 
 
 # Video settings
@@ -373,7 +377,7 @@ def append_log_and_print(log_path, text):
 
 def is_in_area(img_shape, attack_point, hit_area, threshold=0.025):
     ''' 
-    Check if a attack point is in the pointing area 
+    Check if an attack point is in the pointing area
     attack_point: (x, y)
     hit_area: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)]
     '''
@@ -413,7 +417,7 @@ def is_hit_pt(img_shape, attack_point, hit_point, threshold=0.025):
 def check_pointing_area(log_path, img_w, img_h, humans, dict_id2skeleton):
     ''' 
     Check if a person hit the pointing area 
-    
+    :return: array of (id, tech, toward), debug info
     '''
     pt_list = []
     ret_list = []
@@ -455,6 +459,9 @@ def check_pointing_area(log_path, img_w, img_h, humans, dict_id2skeleton):
     # return pt_list
 
 from PublicFunctions import timeTag
+from Streamers.SharedData import *
+import wx
+
 def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=SRC_DATA_PATH,
                  output_folder=args.output_folder, SD=None, ID=-1, img_displayer_on=False):
     timeTag("s5_test_main")
@@ -502,21 +509,29 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
     video_writer = lib_images_io.VideoWriter(
         dst_folder + DST_VIDEO_NAME, DST_VIDEO_FPS)  # video_writer = lib_images_io.VideoWriter(DST_FOLDER + DST_VIDEO_NAME, DST_VIDEO_FPS)
     timeTag("[Complete]")
+
+    while not SD.canResume():  # True if GUI hasn't built
+        pass
+    timeTag("[wx Built]")
     # -- Read images and process
     try:
         ith_img = -1 + 1
         while images_loader.has_image():
             timeTag("deal-image")
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if (cv2.waitKey(1) & 0xFF == ord('q')) or SD.STOP[0]:
+
                 images_loader.stop()
                 append_log_and_print(log_path, '🔴 Stop by pressing q')
                 break
 
             # -- Read image
             img = images_loader.read_image()
-            if img is None and data_type != 'webcam':
-                append_log_and_print(log_path, f"🔴 Error: {img} is None")
-                break
+            if img is None:
+                if data_type != 'webcam':
+                    append_log_and_print(log_path, f"🔴 Error: {img} is None")
+                    break
+                else:
+                    continue
             if img_displayer_on and cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
@@ -554,6 +569,11 @@ def s5_test_main(model_path=SRC_MODEL_PATH, data_type=SRC_DATA_TYPE, data_path=S
                 log_path, img_disp.shape[1], img_disp.shape[0], humans, dict_id2skeleton)
             if len(pt_list):
                 append_log_and_print(log_path, f'\n🟢 {pt_list=}\n')
+                for c in pt_list:
+                    # c is (id, tech, toward)
+                    SD.push(ID, c[0], TechRecord.create(0, c[1], c[2]))
+                    while not SD.canResume():
+                        pass
             else:
                 append_log_and_print(log_path, f'\n🟡 {pt_list=} No one hit the pointing area\n')
             if len(debug_list):
