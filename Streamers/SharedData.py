@@ -92,6 +92,7 @@ class SharedData:
         self.SH_RESULT.append([])
         self.SH_DETER.append(None)
         self.isWriting.append(False)
+
         self.ID += 1
         return self.ID - 1
 
@@ -102,19 +103,14 @@ class SharedData:
         return self.SH_STREAM[id]
 
     def addResultFrame(self, id: int, frame):
-        self.isWriting[id] = True
-        wx.GetApp().CallAfter(self.SH_RESULT[id].append, args=(frame,))
+        self.SH_RESULT[id].append(frame)
         if len(self.SH_RESULT[id]) > self.flushLen:
             with open(f"SharedFiles/RSLT{id}.tmp", 'ab') as f:
                 for i in range(self.flushLen):
-                    wx.GetApp().CallAfter(self.writeWXAfter, args=(id,))
-                    self.writeArray(self.TMP_frame[id], f)
+                    frame = self.SH_RESULT[id][0]
+                    self.writeArray(frame, f)
                     self.SH_RESULT[id].pop(0)
                     self.rstOffset += 1
-        self.isWriting[0] = False
-
-    def writeWXAfter(self, id: int):
-        self.TMP_frame[id] = self.SH_RESULT[id][0]
 
     def getResultFrame(self, id: int, frameNum: int) -> np.ndarray | None:
         """

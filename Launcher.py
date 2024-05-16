@@ -1,10 +1,9 @@
 import multiprocessing
 
-import wx
-
 from MainFrame import *
 from Streamers.SharedData import *
 import Streamers.SharedData as SD
+
 
 if __name__ == '__main__':
     # global SD

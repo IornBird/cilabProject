@@ -43,6 +43,7 @@ class ShowCapture(wx.Panel):
         self.SetBackgroundColour(wx.BLACK)
 
         SD = SharedData(multiprocessing.Manager(), self, 640, 480)
+        SD = SharedData(multiprocessing.Manager(), 640, 480)
 
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
@@ -81,7 +82,6 @@ class ShowCapture(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
         self.callOnBuilt = lambda: [self.OnGUIBuilt(SD)]
-
         self.SetBitmap()
         # self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # if self.SetBitmap():
@@ -153,6 +153,7 @@ class ShowCapture(wx.Panel):
         if gframe is None:
             return
         frame = cv2.cvtColor(gframe, cv2.COLOR_BGR2RGB)
+
 
         self.bmp.CopyFromBuffer(frame)
         # self.Refresh()
@@ -235,7 +236,6 @@ class ShowCapture(wx.Panel):
         self.player.Destroy()
         super().Destroy()
 
-
 class ShowCapture2(wx.Panel):
     def __init__(self, parent, captures=None, fps=60):
         wx.Panel.__init__(self, parent)
@@ -251,6 +251,7 @@ class ShowCapture2(wx.Panel):
         # height, width = frame.shape[:2]
         # if capture is not None:
         #     self.SetBitmap(capture)
+
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         #
         # # self.bmp = wx.BitmapFromBuffer(width, height, frame)
@@ -322,7 +323,6 @@ class ShowCapture2(wx.Panel):
 
         return (width, height)
 
-
 def cv2ShowCapture(cam, fps=60):
     capture = cv2.VideoCapture(cam)
     w = 320
@@ -344,7 +344,7 @@ def cv2ShowCapture(cam, fps=60):
     capture.release()
     cv2.destroyAllWindows()
 
-
+    
 def wxShowCapture(parent, cam, fps=60):
     capture = cv2.VideoCapture(cam)
     fr = capture.read()[1]
@@ -361,7 +361,9 @@ def wxShowCapture(parent, cam, fps=60):
 def test_s5():
     import sys
     import os
+
     ROOT = os.path.dirname(os.path.abspath(__file__)) + "/../"
+
     sys.path.append(ROOT)
     import importlib
     s5_test = importlib.import_module('Realtime-Action-Recognition-master.src.s5_test')
@@ -373,6 +375,7 @@ def test_s5():
     output_path = fr'D:\NCU\Special_Project\cilabProject\Realtime-Action-Recognition-master\output'
     out_folder = video_path.split('\\')[-1][: -4]
     out_vid_path = output_path + '\\' + out_folder + '\\' + out_folder + '.avi'
+
     ip = '192.168.219.229'
     port = '8080'
     https_cam = f'https://{ip}:{port}/video'
@@ -412,7 +415,7 @@ def test_ip_cam():
     frame.Show()
     app.MainLoop()
 
-
+    
 if __name__ == '__main__':
     # test_ip_cam()
 
