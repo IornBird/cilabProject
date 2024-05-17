@@ -42,6 +42,9 @@ class TechRecord:
         neg = -1 if self.invalid else 1
         return [neg * self.score, neg * (self.tech == Tech.VIOLATE)]
 
+    def getScore(self):
+        return findScore(self.tech, self.toward)
+
     def __eq__(self, other):
         teq = (self.tech == other.tech)
         return teq and (self.toward == self.toward or self.tech == Tech.VIOLATE)

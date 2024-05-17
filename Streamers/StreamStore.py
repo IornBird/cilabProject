@@ -220,11 +220,36 @@ class StreamStore:
         return self.recording_process is not None and self.recording_process.is_alive()
 
 
-FILE = '../videos/0.avi'
+FILE_IN = '../videos/example.mp4'
+FILE = '../videos/example60.avi'
 
+def record2():
+    cap = cv2.VideoCapture(FILE_IN)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+    fourcc = cv2.VideoWriter.fourcc(*'XVID')
+    out = cv2.VideoWriter(FILE, fourcc, 60.0, (640, 480))
+    start_time = time.time()
+    frmNum = 0
+    print('loop')
+    timePlaying = 0
+    period = 1000 / 60
+    while True:
+        cap.set(cv2.CAP_PROP_POS_MSEC, timePlaying)
+        print(timePlaying)
+        ret, frame = cap.read()
+        if ret:
+            out.write(frame)
+            timePlaying += period
+        else:
+            out.release()
+            cap.release()
+            cv2.destroyAllWindows()
+            break
 
 def record():
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(FILE_IN)
     fourcc = cv2.VideoWriter.fourcc(*'XVID')
     out = cv2.VideoWriter(FILE, fourcc, 60.0, (640, 480))
     start_time = time.time()
@@ -236,12 +261,15 @@ def record():
             while frmNum < (time.time() - start_time) * 60.0:
                 out.write(frame)
                 frmNum += 1
-            if time.time() - start_time >= 5:
+            if time.time() - start_time >= 24:
                 out.release()
                 cap.release()
                 cv2.destroyAllWindows()
                 break
         else:
+            out.release()
+            cap.release()
+            cv2.destroyAllWindows()
             break
 
 
@@ -256,12 +284,12 @@ def canRead():
 
 _record_test = True
 if __name__ == '__main__':
-    f = open(FILE, 'rb')
+    f = open(FILE_IN, 'rb')
     print(f.read()[:10])
     f.close()
     input("Press [Enter] to continue")
     if _record_test:
-        record()
+        record2()
         print("check if record successes")
         print(canRead())
         print("end")

@@ -43,7 +43,6 @@ class ShowCapture(wx.Panel):
         self.SetBackgroundColour(wx.BLACK)
 
         SD = SharedData(multiprocessing.Manager(), self, 640, 480)
-        SD = SharedData(multiprocessing.Manager(), 640, 480)
 
         # captures = [cv2.VideoCapture(f'https://{c}:{8080}/video') for c in streams]
         # captures = [cv2.VideoCapture('C:\\Users\\User\\Desktop\\source\\source2\\Miyabi_Love_You.mp4')]
@@ -58,11 +57,11 @@ class ShowCapture(wx.Panel):
 
         # self.store = [StreamStore(b, '.\\videos\\' + str(b) + '.avi', fps) for b in (0, 1)]
 
-        # for c in captures:
+        for c in captures:
         #     c.Play()
-            # c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-            # c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
-            # c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
+            c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+            c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+            c.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
         for c in videos:
             c.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
             c.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
@@ -81,11 +80,13 @@ class ShowCapture(wx.Panel):
         self.bmp = None
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
-        self.callOnBuilt = lambda: [self.OnGUIBuilt(SD)]
+        # self.callOnBuilt = lambda: [self.OnGUIBuilt(SD)]
         self.SetBitmap()
         # self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # if self.SetBitmap():
         #     self.timer.Start(self.period)
+        self.buffer = self.importTimestamp()
+
 
     # Interfaces
     def SetTimer(self, timer: wx.Timer):
@@ -177,6 +178,8 @@ class ShowCapture(wx.Panel):
         #     self.callOnBuilt()
         #     self.callOnBuilt = None
         self.player.OnWxTimer(self.playing, self.streaming)
+        self.trypush()
+
         if (self.playing or modified) and not self.drawing:
             self.showFrame()
             self.Refresh()
@@ -230,6 +233,39 @@ class ShowCapture(wx.Panel):
         self.Refresh()
 
         return True
+
+    def importTimestamp(self):
+        with open("videos/timestamp.txt", 'rt') as f:
+            print("imported")
+            s = f.read().split('\n')
+            TB = []
+            TR = []
+            for c in s:
+                info = c.split(' ')
+                time = self.fromTime(info[0])
+                if info[1] == 'B':
+                    TB.append(TechRecord(time, info[2], info[3]))
+                else:
+                    TR.append(TechRecord(time, info[2], info[3]))
+            return [TB, TR]
+
+    def fromTime(self, s):
+        return int(s[0]) * 60000 + int(s[2: 4]) * 1000 + int(s[5:]) * 10
+
+    def trypush(self):
+        for i in (0, 1):
+            for j, c in enumerate(self.buffer[i]):
+                if self.getTotalLength() >= c.time:
+                    techRecord[i][1].append(c)
+                    score = c.getScore()
+                    if score >= 0:
+                        judgeScores[i][0] += score
+                    else:
+                        judgeScores[i][1] += 1
+                        judgeScores[not i][0] += 1
+                    self.buffer[i].pop(j)
+                    self.GetGrandParent().GetGrandParent().timeLine.setScore(judgeScores)
+                    break
 
     # Destructor
     def Destroy(self):
