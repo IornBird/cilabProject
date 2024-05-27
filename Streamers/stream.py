@@ -39,7 +39,7 @@ SD = None
 
 class ShowCapture(wx.Panel):
     def __init__(self, parent, streams: list[str], playbacks: list[str], fps=60):
-        super().__init__(parent)
+        super().__init__(parent, style=wx.FULL_REPAINT_ON_RESIZE)
         self.SetBackgroundColour(wx.BLACK)
 
         SD = SharedData(multiprocessing.Manager(), self, 640, 480)

@@ -38,9 +38,9 @@ class ScorePane(wx.Panel):
         if containing last name, only first letter of which will be shown
         """
         name = contestant.split(' ')
-        self.nameLabel = name[0]
+        self.nameLabel = name[-1]
         if len(name) > 1:
-            self.nameLabel += f" {name[-1][0]}."
+            self.nameLabel += f" {name[0][0]}."
         self.Refresh()
 
     def getName(self):

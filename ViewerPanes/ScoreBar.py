@@ -153,8 +153,10 @@ class ScoreBar(wx.Panel):
         self.setPlayingTime(now)
         self.sliding = False
 
-    def OnSlideBegin(self, evt):
-        pass
+    def OnScoreSet(self):
+        self.RedScore.Refresh()
+        self.BlueScore.Refresh()
+        self.Refresh()
 
     def OnSlideEnd(self, evt):
         pass

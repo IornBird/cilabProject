@@ -6,6 +6,7 @@ class ScoreSetPane(wx.Panel):
     def __init__(self, parent, techRecord, scores):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
+        self.SetFont(wx.Font(wx.FontInfo(18).FaceName("Times New Roman")))
 
         bSizer1 = wx.BoxSizer(wx.VERTICAL)
 
@@ -46,6 +47,9 @@ class ScoreSetPane(wx.Panel):
         self.scores[not isBlue][0] += diff[0] + diff[1]
         self.scores[isBlue][0] += diff[1]
         self.scores[not isBlue][1] += diff[1]
+
+    def updateGUI(self):
+        self.GetGrandParent().GetParent().updateTimeline()
 
     def findTech(self, time: int):
         """
@@ -164,10 +168,12 @@ class ScoreSet(wx.Panel):
                                           else u"Images/notInvalid.png",
                                           wx.BITMAP_TYPE_ANY))
         self.GetParent().updateScores(diff, self.isBlue)
+        self.GetParent().updateGUI()
 
 
     def OnConfirm(self, evt):
         self.updateRecord(self.GetParent().time)
+        self.GetParent().updateGUI()
 
     # Private Functions
     def setInterface(self, index):

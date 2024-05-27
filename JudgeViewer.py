@@ -115,6 +115,9 @@ class JudgeViewer(wx.Panel):
     def resume(self):
         self.gamePaused = False
 
+    def updateTimeline(self):
+        self.timeLine.OnScoreSet()
+
     # Event Catcher
     def OnTimer(self, evt):
         """
