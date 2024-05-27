@@ -16,7 +16,7 @@ class AnalysisViewer(wx.Panel):
         wx.Panel.__init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.Size(500, 300),
                           style=wx.TAB_TRAVERSAL)
 
-        self.SetFont(wx.Font(wx.FontInfo(14)))
+        self.SetFont(wx.Font(wx.FontInfo(18)))
 
         baseSizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -37,6 +37,7 @@ class AnalysisViewer(wx.Panel):
         anaSizer.Add(self.contestantChoice, wx.GBPosition(0, 1), wx.GBSpan(1, 1), wx.ALL | wx.EXPAND, 5)
 
         self.resultChat = wx.grid.Grid(self.anaDataPane, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.resultChat.SetFont(self.GetFont())
 
         # Grid
         self.resultChat.CreateGrid(5, 1)
@@ -49,12 +50,13 @@ class AnalysisViewer(wx.Panel):
         self.resultChat.EnableDragColMove(False)
         self.resultChat.EnableDragColSize(True)
         self.resultChat.SetColLabelSize(30)
+        self.resultChat.SetColLabelValue(0, "Value")
         self.resultChat.SetColLabelAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
 
         # Rows
         self.resultChat.EnableDragRowSize(True)
-        self.resultChat.SetRowLabelSize(80)
-        self.resultChat.SetRowLabelAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        self.resultChat.SetRowLabelSize(120)
+        self.resultChat.SetRowLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
 
         # Label Appearance
 
@@ -80,6 +82,7 @@ class AnalysisViewer(wx.Panel):
         bDataSizer.Add(self.photoPane, 1, wx.ALL | wx.EXPAND, 5)
 
         self.basicChat = wx.grid.Grid(self.baseDataPane, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        self.basicChat.SetFont(self.GetFont())
 
         # Grid
         self.basicChat.CreateGrid(5, 1)
@@ -98,7 +101,7 @@ class AnalysisViewer(wx.Panel):
         # Rows
         self.basicChat.EnableDragRowSize(True)
         self.basicChat.SetRowLabelSize(80)
-        self.basicChat.SetRowLabelAlignment(wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+        self.basicChat.SetRowLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
 
         # Label Appearance
 
@@ -162,21 +165,21 @@ class AnalysisViewer(wx.Panel):
         :param analysisResult:
         """
         baseData = [*baseData, nation]
-        self.changeTable(self.basicChat, baseData, ['id', 'height', 'weight', 'nationality'])
+        self.changeTable(self.basicChat, baseData, ['ID', 'Height', 'Weight', 'Nationality'])
         self.changeTable(self.resultChat, analysisResult, [
             'ID',
-            'contest_num',
-            'contest_tot_secs',
-            'wins',
-            'win_rounds',
-            'lose_rounds',
-            'punches',
-            'kicks',
-            'suc_punches',
-            'suc_kicks',
+            'Contest Num',
+            'Contest tot secs',
+            'Wins',
+            'Win rounds',
+            'Lose rounds',
+            'Punches',
+            'Kicks',
+            'Suc Punches',
+            'Suc Kicks',
             'pts',
-            'vios',
-            'vio_lost_pts'
+            'violates',
+            'Lost pts for violate'
         ])
         return
 
@@ -210,10 +213,20 @@ class AnalysisViewer(wx.Panel):
             table.DeleteRows(new_rows, current_rows - new_rows)
 
         # Set cell values
+        # maxValueWidth = 80
+        # maxItemWidth = 80
         for i, value in enumerate(data):
             table.SetCellValue(i, 0, str(value))
+            # maxValueWidth = max(maxValueWidth, table.GetTextExtent(str(value)).width)
         for i, item in enumerate(items):
             table.SetRowLabelValue(i, item)
+            # maxItemWidth = max(maxItemWidth, table.GetTextExtent(str(item)).width)
+        table.AutoSizeColumns()
+        if table.GetColSize(0) < 80:
+            table.SetColSize(0, 80)
+
+        # table.SetColSize(0, maxValueWidth)
+        # table.SetColSize(0, maxItemWidth)
 
     def OnPaint(self, evt):
         dc = wx.BufferedPaintDC(self.photoPane)

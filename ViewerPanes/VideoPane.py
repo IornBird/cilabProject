@@ -199,7 +199,8 @@ class VideoPane(wx.Panel):
 
     def OnRealTime(self, evt):
         self.stream.toRealTime(evt)
-        # self.GameRun()
+        self.streaming = True
+        self.stream.GamePlay()
         # self.OnPlaySwitch(evt)
 
     def OnChangeCma(self, event):
